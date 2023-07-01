@@ -20,7 +20,6 @@ pub enum Expr {
     Sub(Box<Expr>, Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
     Div(Box<Expr>, Box<Expr>),
-    Paren(Box<Expr>),
 }
 
 impl Expr {
@@ -31,7 +30,6 @@ impl Expr {
             Expr::Sub(a, b) => a.eval() - b.eval(),
             Expr::Mul(a, b) => a.eval() * b.eval(),
             Expr::Div(a, b) => a.eval() / b.eval(),
-            Expr::Paren(e) => e.eval(),
         }
     }
 }
@@ -53,7 +51,6 @@ impl Display for Expr {
             Sub(ref left, ref right) => write!(format, "{} - {}", left, right),
             Mul(ref left, ref right) => write!(format, "{} * {}", left, right),
             Div(ref left, ref right) => write!(format, "{} / {}", left, right),
-            Paren(ref expr) => write!(format, "({})", expr),
         }
     }
 }
@@ -67,18 +64,12 @@ impl Debug for Expr {
             Sub(ref left, ref right) => write!(format, "({:?} - {:?})", left, right),
             Mul(ref left, ref right) => write!(format, "({:?} * {:?})", left, right),
             Div(ref left, ref right) => write!(format, "({:?} / {:?})", left, right),
-            Paren(ref expr) => write!(format, "{:?}", expr),
         }
     }
 }
 
 fn parens(i: &str) -> IResult<&str, Expr> {
-    delimited(
-        multispace,
-        delimited(tag("("), map(expr, |e| Expr::Paren(Box::new(e))), tag(")")),
-        multispace,
-    )
-    .parse(i)
+    delimited(multispace, delimited(tag("("), expr, tag(")")), multispace).parse(i)
 }
 
 fn factor(i: &str) -> IResult<&str, Expr> {
@@ -168,16 +159,12 @@ fn expr_test() {
         expr(" 72 / 2 / 3 ").map(|(i, x)| (i, format!("{:?}", x))),
         Ok(("", String::from("((72 / 2) / 3)")))
     );
-    assert_eq!(
-        expr(" (-3) ").map(|(i, x)| (i, format!("{:?}", x))),
-        Ok(("", String::from("(-3)")))
-    );
 }
 
 #[test]
 fn parens_test() {
     assert_eq!(
         expr(" ( 1 + 2 ) *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
-        Ok(("", String::from("([(1 + 2)] * 3)")))
+        Ok(("", String::from("((1 + 2) * 3)")))
     );
 }
