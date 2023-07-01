@@ -49,3 +49,39 @@ fn bind_test() {
         Ok(("", "let a = 123".to_string()))
     )
 }
+
+pub struct Set {
+    pub name: String,
+    pub value: Expr,
+}
+
+impl Display for Set {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} = {}", self.name, self.value)
+    }
+}
+
+pub fn set(i: &str) -> IResult<&str, Set> {
+    map(
+        tuple((
+            identifier,
+            delimited(multispace, tag("="), multispace),
+            expr,
+        )),
+        |(id, _, expr)| match id {
+            Expr::Factor(Value::Variable(s)) => Set {
+                name: s,
+                value: expr,
+            },
+            _ => unreachable!(),
+        },
+    )
+    .parse(i)
+}
+#[test]
+fn set_test() {
+    assert_eq!(
+        set("a = 123").map(|(i, b)| (i, format!("{}", b))),
+        Ok(("", "a = 123".to_string()))
+    )
+}

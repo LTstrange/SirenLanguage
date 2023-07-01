@@ -26,6 +26,16 @@ impl Environment {
                 }
             }
             Statement::Expr(expr) => Ok(Some(self.eval_expr(expr)?)),
+            Statement::Set(set) => {
+                let value = self.eval_expr(set.value);
+                match value {
+                    Ok(v) => {
+                        self.set(&set.name, v)?;
+                        Ok(None)
+                    }
+                    Err(e) => Err(e.to_string()),
+                }
+            }
         }
     }
 
