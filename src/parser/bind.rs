@@ -13,8 +13,8 @@ use nom::{
 use crate::parser::expr::{expr, identifier, Expr, Value};
 
 pub struct Bind {
-    name: String,
-    value: Expr,
+    pub name: String,
+    pub value: Expr,
 }
 
 impl Display for Bind {
@@ -45,7 +45,7 @@ pub fn bind(i: &str) -> IResult<&str, Bind> {
 #[test]
 fn bind_test() {
     assert_eq!(
-        bind("a = 123").map(|(i, b)| (i, format!("{}", b))),
+        bind("let a = 123").map(|(i, b)| (i, format!("{}", b))),
         Ok(("", "let a = 123".to_string()))
     )
 }

@@ -1,8 +1,9 @@
 use colored::Colorize;
-use siren_language::SirenParser;
+use siren_language::{run, Environment};
 use std::io::{self, Write};
 
 fn main() {
+    let mut env = Environment::new();
     // repl
     loop {
         print!("> ");
@@ -13,8 +14,11 @@ fn main() {
         match input {
             "" => continue,
             "quit" | "q" => break,
-            input => match SirenParser::parse(input) {
-                Ok(expr) => println!("{}", expr),
+            input => match run(&mut env, input) {
+                Ok(output) => match output {
+                    Some(number) => println!("{}", number),
+                    None => continue,
+                },
                 Err(msg) => println!("{}", format!("Error: {}", msg).red()),
             },
         }
