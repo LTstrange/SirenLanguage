@@ -79,6 +79,7 @@ fn parens(i: &str) -> IResult<&str, Expr> {
     delimited(multispace, delimited(tag("("), expr, tag(")")), multispace).parse(i)
 }
 
+// conclude identifier, number, unary expression and parens
 fn factor(i: &str) -> IResult<&str, Expr> {
     alt((
         identifier,
@@ -96,6 +97,7 @@ fn factor(i: &str) -> IResult<&str, Expr> {
     .parse(i)
 }
 
+// fold list of expressions
 fn fold_exprs(initial: Expr, remainder: Vec<(Infix, Expr)>) -> Expr {
     remainder.into_iter().fold(initial, |acc, pair| {
         let (oper, expr) = pair;

@@ -1,5 +1,3 @@
-// let a = 123;
-
 use std::fmt::Display;
 
 use nom::{
@@ -23,6 +21,7 @@ impl Display for Bind {
     }
 }
 
+// let a = 123
 pub fn bind(i: &str) -> IResult<&str, Bind> {
     map(
         tuple((
@@ -61,6 +60,7 @@ impl Display for Set {
     }
 }
 
+// a = 123
 pub fn set(i: &str) -> IResult<&str, Set> {
     map(
         tuple((

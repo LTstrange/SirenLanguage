@@ -12,6 +12,7 @@ impl Environment {
         Environment::default()
     }
 
+    // evaluate oneline code
     pub fn eval(&mut self, ast: Statement) -> Result<Option<i64>, String> {
         match ast {
             Statement::Bind(bind) => {
@@ -39,6 +40,7 @@ impl Environment {
         }
     }
 
+    // evaluate expression
     fn eval_expr(&self, expr: Expr) -> Result<i64, &str> {
         match expr {
             Expr::Factor(f) => match f {
@@ -58,6 +60,7 @@ impl Environment {
         }
     }
 
+    // bind variable to the variable table
     fn bind(&mut self, name: &str, value: i64) -> Result<(), &str> {
         if self.variables.contains_key(name) {
             return Err("Variable already exists");
@@ -66,6 +69,7 @@ impl Environment {
         Ok(())
     }
 
+    // set(update) variable in the variable table
     fn set(&mut self, name: &str, value: i64) -> Result<(), &str> {
         if !self.variables.contains_key(name) {
             return Err("Variable not exists");
