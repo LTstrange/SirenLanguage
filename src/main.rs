@@ -1,3 +1,4 @@
+use colored::Colorize;
 use siren_language::SirenParser;
 use std::io::{self, Write};
 
@@ -13,8 +14,8 @@ fn main() {
             "" => continue,
             "quit" | "q" => break,
             input => match SirenParser::parse(input) {
-                Ok(expr) => println!("result: {}", expr),
-                Err(msg) => println!("error: {}", msg),
+                Ok(expr) => println!("{}", expr),
+                Err(msg) => println!("{}", format!("Error: {}", msg).red()),
             },
         }
     }
