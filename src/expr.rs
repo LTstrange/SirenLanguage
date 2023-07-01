@@ -100,7 +100,7 @@ impl Debug for Expr {
     }
 }
 
-fn identifier(i: &str) -> IResult<&str, Expr> {
+pub fn identifier(i: &str) -> IResult<&str, Expr> {
     // variable
     map(delimited(multispace, alpha1, multispace), |s: &str| {
         Expr::Factor(Value::Variable(s.to_string()))

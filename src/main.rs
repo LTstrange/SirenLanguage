@@ -1,4 +1,4 @@
-use siren_language::Parser;
+use siren_language::SirenParser;
 use std::io::{self, Write};
 
 fn main() {
@@ -12,8 +12,8 @@ fn main() {
         match input {
             "" => continue,
             "quit" | "q" => break,
-            input => match Parser::parse(input) {
-                Ok(expr) => println!("result: {:?}", expr),
+            input => match SirenParser::parse(input) {
+                Ok(expr) => println!("result: {}", expr),
                 Err(msg) => println!("error: {}", msg),
             },
         }
