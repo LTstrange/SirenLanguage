@@ -26,26 +26,6 @@ pub enum Expr {
     BinExpr(Box<Expr>, Infix, Box<Expr>),
 }
 
-// impl Expr {
-//     pub fn eval(&self) -> i64 {
-//         match self {
-//             Expr::Factor(v) => match v {
-//                 Value::Value(n) => *n,
-//                 Value::Variable(_v) => todo!(),
-//             },
-//             Expr::UnExpr(op, right) => match op {
-//                 Prefix::Minus => -right.eval(),
-//             },
-//             Expr::BinExpr(left, op, right) => match op {
-//                 Infix::Add => left.eval() + right.eval(),
-//                 Infix::Sub => left.eval() - right.eval(),
-//                 Infix::Mul => left.eval() * right.eval(),
-//                 Infix::Div => left.eval() / right.eval(),
-//             },
-//         }
-//     }
-// }
-
 pub enum Prefix {
     Minus,
 }
