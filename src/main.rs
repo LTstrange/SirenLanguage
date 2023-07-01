@@ -13,7 +13,7 @@ fn main() {
             "" => continue,
             "quit" | "q" => break,
             input => match Parser::parse(input) {
-                Ok(expr) => println!("result: {:?} = {}", expr, expr.eval()),
+                Ok(expr) => println!("result: {:?}", expr),
                 Err(msg) => println!("error: {}", msg),
             },
         }
