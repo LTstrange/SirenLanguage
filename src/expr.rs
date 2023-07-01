@@ -47,10 +47,10 @@ impl Display for Expr {
         use self::Expr::*;
         match *self {
             Value(val) => write!(format, "{}", val),
-            Add(ref left, ref right) => write!(format, "{} + {}", left, right),
-            Sub(ref left, ref right) => write!(format, "{} - {}", left, right),
-            Mul(ref left, ref right) => write!(format, "{} * {}", left, right),
-            Div(ref left, ref right) => write!(format, "{} / {}", left, right),
+            Add(ref left, ref right) => write!(format, "({} + {})", left, right),
+            Sub(ref left, ref right) => write!(format, "({} - {})", left, right),
+            Mul(ref left, ref right) => write!(format, "({} * {})", left, right),
+            Div(ref left, ref right) => write!(format, "({} / {})", left, right),
         }
     }
 }
