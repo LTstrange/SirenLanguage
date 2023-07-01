@@ -25,3 +25,19 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
         map(expr::expr, Statement::Expr),
     ))(i)
 }
+
+#[test]
+fn statement_test() {
+    assert_eq!(
+        statement("let a = 123").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Bind: let a = 123".to_string()))
+    );
+    assert_eq!(
+        statement("123 + 254").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Expr: (123 + 254)".to_string()))
+    );
+    assert_eq!(
+        statement("let abc =123 + 254").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Bind: let abc = (123 + 254)".to_string()))
+    );
+}
