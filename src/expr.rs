@@ -16,26 +16,33 @@ use nom::{
 
 pub enum Expr {
     Value(i64),
-    Add(Box<Expr>, Box<Expr>),
-    Sub(Box<Expr>, Box<Expr>),
-    Mul(Box<Expr>, Box<Expr>),
-    Div(Box<Expr>, Box<Expr>),
+    UnExpr(Prefix, Box<Expr>),
+    BinExpr(Box<Expr>, Infix, Box<Expr>),
 }
 
 impl Expr {
     pub fn eval(&self) -> i64 {
         match self {
             Expr::Value(v) => *v,
-            Expr::Add(a, b) => a.eval() + b.eval(),
-            Expr::Sub(a, b) => a.eval() - b.eval(),
-            Expr::Mul(a, b) => a.eval() * b.eval(),
-            Expr::Div(a, b) => a.eval() / b.eval(),
+            Expr::UnExpr(op, right) => match op {
+                Prefix::Minus => -right.eval(),
+            },
+            Expr::BinExpr(left, op, right) => match op {
+                Infix::Add => left.eval() + right.eval(),
+                Infix::Sub => left.eval() - right.eval(),
+                Infix::Mul => left.eval() * right.eval(),
+                Infix::Div => left.eval() / right.eval(),
+            },
         }
     }
 }
 
+pub enum Prefix {
+    Minus,
+}
+
 #[derive(Debug)]
-pub enum Oper {
+pub enum Infix {
     Add,
     Sub,
     Mul,
@@ -45,12 +52,17 @@ pub enum Oper {
 impl Display for Expr {
     fn fmt(&self, format: &mut Formatter<'_>) -> fmt::Result {
         use self::Expr::*;
-        match *self {
+        match self {
             Value(val) => write!(format, "{}", val),
-            Add(ref left, ref right) => write!(format, "({} + {})", left, right),
-            Sub(ref left, ref right) => write!(format, "({} - {})", left, right),
-            Mul(ref left, ref right) => write!(format, "({} * {})", left, right),
-            Div(ref left, ref right) => write!(format, "({} / {})", left, right),
+            UnExpr(op, right) => match op {
+                Prefix::Minus => write!(format, "(-{})", right),
+            },
+            BinExpr(left, op, right) => match op {
+                Infix::Add => write!(format, "({} + {})", left, right),
+                Infix::Sub => write!(format, "({} - {})", left, right),
+                Infix::Mul => write!(format, "({} * {})", left, right),
+                Infix::Div => write!(format, "({} / {})", left, right),
+            },
         }
     }
 }
@@ -58,12 +70,17 @@ impl Display for Expr {
 impl Debug for Expr {
     fn fmt(&self, format: &mut Formatter<'_>) -> fmt::Result {
         use self::Expr::*;
-        match *self {
+        match self {
             Value(val) => write!(format, "{}", val),
-            Add(ref left, ref right) => write!(format, "({:?} + {:?})", left, right),
-            Sub(ref left, ref right) => write!(format, "({:?} - {:?})", left, right),
-            Mul(ref left, ref right) => write!(format, "({:?} * {:?})", left, right),
-            Div(ref left, ref right) => write!(format, "({:?} / {:?})", left, right),
+            UnExpr(op, right) => match op {
+                Prefix::Minus => write!(format, "(-{})", right),
+            },
+            BinExpr(left, op, right) => match op {
+                Infix::Add => write!(format, "({} + {})", left, right),
+                Infix::Sub => write!(format, "({} - {})", left, right),
+                Infix::Mul => write!(format, "({} * {})", left, right),
+                Infix::Div => write!(format, "({} / {})", left, right),
+            },
         }
     }
 }
@@ -83,15 +100,10 @@ fn factor(i: &str) -> IResult<&str, Expr> {
     .parse(i)
 }
 
-fn fold_exprs(initial: Expr, remainder: Vec<(Oper, Expr)>) -> Expr {
+fn fold_exprs(initial: Expr, remainder: Vec<(Infix, Expr)>) -> Expr {
     remainder.into_iter().fold(initial, |acc, pair| {
         let (oper, expr) = pair;
-        match oper {
-            Oper::Add => Expr::Add(Box::new(acc), Box::new(expr)),
-            Oper::Sub => Expr::Sub(Box::new(acc), Box::new(expr)),
-            Oper::Mul => Expr::Mul(Box::new(acc), Box::new(expr)),
-            Oper::Div => Expr::Div(Box::new(acc), Box::new(expr)),
-        }
+        Expr::BinExpr(Box::new(acc), oper, Box::new(expr))
     })
 }
 
@@ -100,11 +112,11 @@ fn term(i: &str) -> IResult<&str, Expr> {
     let (i, remainder) = many0(alt((
         |i| {
             let (i, mul) = preceded(tag("*"), factor).parse(i)?;
-            Ok((i, (Oper::Mul, mul)))
+            Ok((i, (Infix::Mul, mul)))
         },
         |i| {
             let (i, div) = preceded(tag("/"), factor).parse(i)?;
-            Ok((i, (Oper::Div, div)))
+            Ok((i, (Infix::Div, div)))
         },
     )))
     .parse(i)?;
@@ -117,11 +129,11 @@ pub fn expr(i: &str) -> IResult<&str, Expr> {
     let (i, remainder) = many0(alt((
         |i| {
             let (i, add) = preceded(tag("+"), term).parse(i)?;
-            Ok((i, (Oper::Add, add)))
+            Ok((i, (Infix::Add, add)))
         },
         |i| {
             let (i, sub) = preceded(tag("-"), term).parse(i)?;
-            Ok((i, (Oper::Sub, sub)))
+            Ok((i, (Infix::Sub, sub)))
         },
     )))
     .parse(i)?;
@@ -168,3 +180,11 @@ fn parens_test() {
         Ok(("", String::from("((1 + 2) * 3)")))
     );
 }
+
+// #[test]
+// fn unary_test() {
+//     assert_eq!(
+//         expr(" - 1 ").map(|(i, x)| (i, format!("{:?}", x))),
+//         Ok(("", String::from("(-1)")))
+//     );
+// }
