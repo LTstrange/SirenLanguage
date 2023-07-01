@@ -31,9 +31,9 @@ pub struct SirenParser;
 impl SirenParser {
     pub fn parse(_input: &str) -> Result<Statement, String> {
         match statement(_input) {
-            Ok((i, e)) if i.is_empty() => Ok(e),
+            Ok((i, statement)) if i.is_empty() => Ok(statement),
             Ok((_, _)) => Err(String::from("Invalid input")),
-            Err(e) => Err(format!("{:?}", e)),
+            Err(err) => Err(format!("{:?}", err)),
         }
     }
 }
