@@ -1,7 +1,8 @@
 use std::fmt::Display;
 
-use crate::bind;
-use crate::expr;
+use crate::parser::bind;
+use crate::parser::expr;
+
 use nom::{branch::alt, combinator::map, IResult};
 
 pub enum Statement {

@@ -10,7 +10,7 @@ use nom::{
     IResult, Parser,
 };
 
-use crate::expr::{expr, identifier, Expr, Value};
+use crate::parser::expr::{expr, identifier, Expr, Value};
 
 pub struct Bind {
     name: String,
