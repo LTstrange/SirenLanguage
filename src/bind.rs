@@ -12,7 +12,6 @@ use nom::{
 
 use crate::expr::{expr, identifier, Expr, Value};
 
-#[derive(Debug)]
 pub struct Bind {
     name: String,
     value: Expr,

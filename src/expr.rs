@@ -79,27 +79,6 @@ impl Display for Expr {
     }
 }
 
-impl Debug for Expr {
-    fn fmt(&self, format: &mut Formatter<'_>) -> fmt::Result {
-        use self::Expr::*;
-        match self {
-            Factor(val) => match val {
-                Value::Value(n) => write!(format, "{}", n),
-                Value::Variable(v) => write!(format, "{}", v),
-            },
-            UnExpr(op, right) => match op {
-                Prefix::Minus => write!(format, "(-{})", right),
-            },
-            BinExpr(left, op, right) => match op {
-                Infix::Add => write!(format, "({} + {})", left, right),
-                Infix::Sub => write!(format, "({} - {})", left, right),
-                Infix::Mul => write!(format, "({} * {})", left, right),
-                Infix::Div => write!(format, "({} / {})", left, right),
-            },
-        }
-    }
-}
-
 pub fn identifier(i: &str) -> IResult<&str, Expr> {
     // variable
     map(delimited(multispace, alpha1, multispace), |s: &str| {
@@ -181,7 +160,7 @@ pub fn expr(i: &str) -> IResult<&str, Expr> {
 #[test]
 fn factor_test() {
     assert_eq!(
-        factor("  3  ").map(|(i, x)| (i, format!("{:?}", x))),
+        factor("  3  ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("3")))
     );
 }
@@ -189,7 +168,7 @@ fn factor_test() {
 #[test]
 fn term_test() {
     assert_eq!(
-        term(" 3 *  5   ").map(|(i, x)| (i, format!("{:?}", x))),
+        term(" 3 *  5   ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(3 * 5)")))
     );
 }
@@ -197,15 +176,15 @@ fn term_test() {
 #[test]
 fn expr_test() {
     assert_eq!(
-        expr(" 1 + 2 *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
+        expr(" 1 + 2 *  3 ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(1 + (2 * 3))")))
     );
     assert_eq!(
-        expr(" 1 + 2 *  3 / 4 - 5 ").map(|(i, x)| (i, format!("{:?}", x))),
+        expr(" 1 + 2 *  3 / 4 - 5 ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("((1 + ((2 * 3) / 4)) - 5)")))
     );
     assert_eq!(
-        expr(" 72 / 2 / 3 ").map(|(i, x)| (i, format!("{:?}", x))),
+        expr(" 72 / 2 / 3 ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("((72 / 2) / 3)")))
     );
 }
@@ -213,7 +192,7 @@ fn expr_test() {
 #[test]
 fn parens_test() {
     assert_eq!(
-        expr(" ( 1 + 2 ) *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
+        expr(" ( 1 + 2 ) *  3 ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("((1 + 2) * 3)")))
     );
 }
@@ -221,19 +200,19 @@ fn parens_test() {
 #[test]
 fn unary_test() {
     assert_eq!(
-        expr(" - 1 ").map(|(i, x)| (i, format!("{:?}", x))),
+        expr(" - 1 ").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(-1)")))
     );
     assert_eq!(
-        expr("2 * -1").map(|(i, x)| (i, format!("{:?}", x))),
+        expr("2 * -1").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(2 * (-1))")))
     );
     assert_eq!(
-        expr("-(2 * 1)").map(|(i, x)| (i, format!("{:?}", x))),
+        expr("-(2 * 1)").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(-(2 * 1))")))
     );
     assert_eq!(
-        expr("-1 + 3").map(|(i, x)| (i, format!("{:?}", x))),
+        expr("-1 + 3").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("((-1) + 3)")))
     );
 }
@@ -241,15 +220,15 @@ fn unary_test() {
 #[test]
 fn identifier_test() {
     assert_eq!(
-        expr("x").map(|(i, x)| (i, format!("{:?}", x))),
+        expr("x").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("x")))
     );
     assert_eq!(
-        expr("2 + x").map(|(i, x)| (i, format!("{:?}", x))),
+        expr("2 + x").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(2 + x)")))
     );
     assert_eq!(
-        expr("-x").map(|(i, x)| (i, format!("{:?}", x))),
+        expr("-x").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(-x)")))
     );
 }
