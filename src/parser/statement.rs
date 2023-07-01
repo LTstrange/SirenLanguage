@@ -21,11 +21,12 @@ impl Display for Statement {
     }
 }
 
+// oneline code parser
 pub fn statement(i: &str) -> IResult<&str, Statement> {
     alt((
-        map(bind::set, Statement::Set),
-        map(bind::bind, Statement::Bind),
-        map(expr::expr, Statement::Expr),
+        map(bind::set, Statement::Set),   // set: "a = 123"
+        map(bind::bind, Statement::Bind), // bind: "let a = 123"
+        map(expr::expr, Statement::Expr), // expr: "(123 + 234) / 5"
     ))(i)
 }
 
