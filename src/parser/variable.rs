@@ -12,6 +12,7 @@ use crate::parser::expr::{expr, identifier, Expr, Value};
 
 pub struct Bind {
     pub name: String,
+    // todo : add type check
     pub value: Expr,
 }
 
