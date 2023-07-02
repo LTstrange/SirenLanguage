@@ -1,14 +1,14 @@
 use std::fmt::Display;
 
-use crate::parser::bind;
 use crate::parser::expr;
+use crate::parser::variable;
 
 use nom::{branch::alt, combinator::map, IResult};
 
 pub enum Statement {
-    Bind(bind::Bind),
+    Bind(variable::Bind),
     Expr(expr::Expr),
-    Set(bind::Set),
+    Set(variable::Set),
 }
 
 impl Display for Statement {
@@ -24,9 +24,9 @@ impl Display for Statement {
 // oneline code parser
 pub fn statement(i: &str) -> IResult<&str, Statement> {
     alt((
-        map(bind::set, Statement::Set),   // set: "a = 123"
-        map(bind::bind, Statement::Bind), // bind: "let a = 123"
-        map(expr::expr, Statement::Expr), // expr: "(123 + 234) / 5"
+        map(variable::set, Statement::Set),   // set: "a = 123"
+        map(variable::bind, Statement::Bind), // bind: "let a = 123"
+        map(expr::expr, Statement::Expr),     // expr: "(123 + 234) / 5"
     ))(i)
 }
 

@@ -1,8 +1,8 @@
 use statement::{statement, Statement};
 
-pub mod bind;
 pub mod expr;
 pub mod statement;
+pub mod variable;
 
 pub struct SirenParser;
 impl SirenParser {
