@@ -45,5 +45,9 @@ b = -39
 
 2. minimum interpreter for file
   - [x] read and interprete file
+  - [ ] variable table type system
   - [ ] fn (function):
-    - [ ] fn parser
+    - [x] fn parser
+    - [ ] return statement
+    - [ ] fn interpreter
+      - [ ] bind function
