@@ -4,6 +4,9 @@ use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
 use nom::character::complete::alpha1;
+use nom::combinator::recognize;
+use nom::multi::separated_list0;
+use nom::sequence::tuple;
 use nom::Parser;
 use nom::{
     branch::alt,
@@ -15,9 +18,12 @@ use nom::{
     IResult,
 };
 
+use super::statement::{statements, Statement};
+
 pub enum Value {
     Num(i64),
     Variable(String),
+    Function(Vec<String>, Vec<Statement>),
 }
 
 pub enum Expr {
@@ -45,6 +51,17 @@ impl Display for Expr {
             Factor(val) => match val {
                 Value::Num(n) => write!(format, "{}", n),
                 Value::Variable(v) => write!(format, "{}", v),
+                Value::Function(args, _stmts) => {
+                    write!(
+                        format,
+                        "fn ({}) {{ {}}}",
+                        args.join(", "),
+                        _stmts
+                            .iter()
+                            .map(|stmt| format!("{}; ", stmt))
+                            .collect::<String>()
+                    )
+                }
             },
             UnExpr(op, right) => match op {
                 Prefix::Minus => write!(format, "(-{})", right),
@@ -73,6 +90,27 @@ fn number(i: &str) -> IResult<&str, Expr> {
         |n: i64| Expr::Factor(Value::Num(n)),
     )
     .parse(i)
+}
+
+fn function(i: &str) -> IResult<&str, Expr> {
+    // arguments
+    let (i, args) = preceded(
+        tuple((multispace, tag("fn"), multispace)),
+        // tuple of arguments
+        delimited(
+            tag("("),
+            separated_list0(tag(","), recognize(identifier)),
+            tag(")"),
+        ),
+    )(i)?;
+    // statements
+    let (i, stmts) = delimited(
+        tuple((multispace, tag("{"))),
+        statements,
+        tuple((multispace, tag("}"), multispace)),
+    )(i)?;
+    let args = args.into_iter().map(|arg| arg.trim().to_string()).collect();
+    Ok((i, Expr::Factor(Value::Function(args, stmts))))
 }
 
 fn parens(i: &str) -> IResult<&str, Expr> {
@@ -212,5 +250,16 @@ fn identifier_test() {
     assert_eq!(
         expr("-x").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", String::from("(-x)")))
+    );
+}
+
+#[test]
+fn function_test() {
+    assert_eq!(
+        function("fn(x, y) { x + y;  x - y;}").map(|(i, x)| (i, format!("{}", x))),
+        Ok((
+            "",
+            "fn (x, y) { Expr: (x + y); Expr: (x - y); }".to_string()
+        ))
     );
 }

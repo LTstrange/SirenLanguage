@@ -58,6 +58,7 @@ impl Environment {
                     Some(n) => Ok(n),
                     None => Err("no such variable"),
                 },
+                crate::parser::expr::Value::Function(_, _) => todo!(),
             },
             Expr::UnExpr(_, n) => Ok(-self.eval_expr(*n)?),
             Expr::BinExpr(l, op, r) => match op {
