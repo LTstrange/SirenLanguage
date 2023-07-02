@@ -16,7 +16,7 @@ use nom::{
 };
 
 pub enum Value {
-    Value(i64),
+    Num(i64),
     Variable(String),
 }
 
@@ -43,7 +43,7 @@ impl Display for Expr {
         use self::Expr::*;
         match self {
             Factor(val) => match val {
-                Value::Value(n) => write!(format, "{}", n),
+                Value::Num(n) => write!(format, "{}", n),
                 Value::Variable(v) => write!(format, "{}", v),
             },
             UnExpr(op, right) => match op {
@@ -70,7 +70,7 @@ pub fn identifier(i: &str) -> IResult<&str, Expr> {
 fn number(i: &str) -> IResult<&str, Expr> {
     map(
         map_res(delimited(multispace, digit, multispace), FromStr::from_str),
-        |n: i64| Expr::Factor(Value::Value(n)),
+        |n: i64| Expr::Factor(Value::Num(n)),
     )
     .parse(i)
 }
