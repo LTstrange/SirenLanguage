@@ -1,10 +1,19 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::parser::{expr::Expr, statement::Statement};
 
 #[derive(Default)]
 pub struct Environment {
     variables: HashMap<String, i64>,
+}
+
+impl Display for Environment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (key, value) in &self.variables {
+            writeln!(f, "{} = {}", key, value)?;
+        }
+        Ok(())
+    }
 }
 
 impl Environment {

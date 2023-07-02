@@ -51,4 +51,6 @@ fn file_interpreter(env: &mut Environment, file_name: &str) {
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
     println!("{}", contents);
+
+    println!("{}", env);
 }
