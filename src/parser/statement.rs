@@ -53,6 +53,10 @@ fn statement_test() {
         statement("abc =123 + 254").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", "Set: abc = (123 + 254)".to_string()))
     );
+    assert_eq!(
+        statement("let abc = fn (a, b) {a + b;}").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Bind: let abc = fn (a, b) { Expr: (a + b); }".to_string()))
+    );
 }
 
 pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {

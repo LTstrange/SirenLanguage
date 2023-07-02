@@ -120,6 +120,7 @@ fn parens(i: &str) -> IResult<&str, Expr> {
 // conclude identifier, number, unary expression and parens
 fn factor(i: &str) -> IResult<&str, Expr> {
     alt((
+        function,
         identifier,
         number,
         map(
