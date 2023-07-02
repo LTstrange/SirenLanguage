@@ -53,7 +53,7 @@ impl Environment {
     fn eval_expr(&self, expr: Expr) -> Result<i64, &str> {
         match expr {
             Expr::Factor(f) => match f {
-                crate::parser::expr::Value::Value(n) => Ok(n),
+                crate::parser::expr::Value::Num(n) => Ok(n),
                 crate::parser::expr::Value::Variable(id) => match self.get(&id) {
                     Some(n) => Ok(n),
                     None => Err("no such variable"),
