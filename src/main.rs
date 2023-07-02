@@ -11,10 +11,7 @@ fn main() {
         repl(&mut env);
     } else if args.len() == 2 && args[1].ends_with(".siren") {
         // file interprete
-        let mut file = std::fs::File::open(&args[1]).unwrap();
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
-        println!("{}", contents);
+        file_interpreter(&mut env, &args[1]);
     } else {
         println!("Usage:");
         println!("    siren              : repl");
@@ -47,4 +44,11 @@ fn repl(env: &mut Environment) {
             },
         }
     }
+}
+
+fn file_interpreter(env: &mut Environment, file_name: &str) {
+    let mut file = std::fs::File::open(file_name).unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+    println!("{}", contents);
 }
