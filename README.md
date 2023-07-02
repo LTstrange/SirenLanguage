@@ -9,7 +9,7 @@ This language will become a graphic and text programming language.
 let a = 123 - 12 / 4;
 let b = (-a + 42) / 2;
 ```
-REPL output:
+REPL output: `cargo r`
 ```
 > let a = 123 - 12 / 4
 > a
@@ -19,7 +19,7 @@ REPL output:
 -39
 >
 ```
-File output: cargo r test1.siren
+File output: `cargo r test1.siren`
 ```
 Content:
 let a = 123 - 12 / 4;
