@@ -62,7 +62,7 @@ pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
 #[test]
 fn statements_test() {
     assert_eq!(
-        statements("let a = 123;").map(|(i, stmts)| {
+        statements("  let a = 123 ;   123 - 12 / 4  ; a= b  ;").map(|(i, stmts)| {
             (
                 i,
                 stmts
@@ -71,6 +71,13 @@ fn statements_test() {
                     .collect::<Vec<String>>(),
             )
         }),
-        Ok(("", vec!["Bind: let a = 123".to_string()]))
+        Ok((
+            "",
+            vec![
+                "Bind: let a = 123".to_string(),
+                "Expr: (123 - (12 / 4))".to_string(),
+                "Set: a = b".to_string()
+            ],
+        )),
     );
 }
