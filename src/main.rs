@@ -1,5 +1,5 @@
 use colored::Colorize;
-use siren_language::{run, Environment};
+use siren_language::{run, run_file, Environment};
 use std::io::{self, Read, Write};
 
 fn main() {
@@ -48,9 +48,15 @@ fn repl(env: &mut Environment) {
 
 fn file_interpreter(env: &mut Environment, file_name: &str) {
     let mut file = std::fs::File::open(file_name).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
-    println!("{}", contents);
-
+    let mut content = String::new();
+    file.read_to_string(&mut content).unwrap();
+    println!("Content:");
+    println!("{}", content);
+    match run_file(env, content) {
+        Ok(()) => (),
+        Err(msg) => println!("{}", format!("Error: {}", msg).red()), // print error
+    }
+    println!("Done.");
+    println!("Env:");
     println!("{}", env);
 }

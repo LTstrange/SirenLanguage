@@ -3,6 +3,11 @@ use std::fmt::Display;
 use crate::parser::expr;
 use crate::parser::variable;
 
+use nom::bytes::complete::tag;
+use nom::character::complete::multispace0;
+
+use nom::multi::many0;
+use nom::sequence::delimited;
 use nom::{branch::alt, combinator::map, IResult};
 
 pub enum Statement {
@@ -47,5 +52,25 @@ fn statement_test() {
     assert_eq!(
         statement("abc =123 + 254").map(|(i, x)| (i, format!("{}", x))),
         Ok(("", "Set: abc = (123 + 254)".to_string()))
+    );
+}
+
+pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
+    many0(delimited(multispace0, statement, tag(";")))(i)
+}
+
+#[test]
+fn statements_test() {
+    assert_eq!(
+        statements("let a = 123;").map(|(i, stmts)| {
+            (
+                i,
+                stmts
+                    .iter()
+                    .map(|stmt| format!("{}", stmt))
+                    .collect::<Vec<String>>(),
+            )
+        }),
+        Ok(("", vec!["Bind: let a = 123".to_string()]))
     );
 }

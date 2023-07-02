@@ -34,5 +34,6 @@ output:
     - [x] assign statement
 
 2. minimum interpreter for file
+  - [x] read and interprete file
   - [ ] fn (function):
     - [ ] fn parser
