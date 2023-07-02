@@ -6,10 +6,10 @@ This language will become a graphic and text programming language.
 
 ## example
 ```
-let a = 123 - 12 / 4
-let b = (-a + 42) / 2
+let a = 123 - 12 / 4;
+let b = (-a + 42) / 2;
 ```
-output:
+REPL output:
 ```
 > let a = 123 - 12 / 4
 > a
@@ -18,6 +18,16 @@ output:
 > b
 -39
 >
+```
+File output: cargo r test1.siren
+```
+Content:
+let a = 123 - 12 / 4;
+let b = (-a + 42) / 2;
+Done.
+Env:
+a = 120
+b = -39
 ```
 
 ## Todolist
