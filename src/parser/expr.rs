@@ -20,6 +20,9 @@ use nom::{
 
 use super::statement::{statements, Statement};
 
+// todo : use a better way to construct ast structure
+// github : monkey-rs project
+
 pub enum Value {
     Num(i64),
     Variable(String),

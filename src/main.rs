@@ -60,6 +60,6 @@ fn file_interpreter(env: &mut Environment, file_name: &str) {
         } // print error
     }
     println!("Done.");
-    println!("Env:");
+    println!("Env:"); // print variables in the environment
     println!("{}", env);
 }

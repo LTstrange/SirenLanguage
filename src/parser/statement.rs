@@ -55,10 +55,14 @@ fn statement_test() {
     );
     assert_eq!(
         statement("let abc = fn (a, b) {a + b;}").map(|(i, x)| (i, format!("{}", x))),
-        Ok(("", "Bind: let abc = fn (a, b) { Expr: (a + b); }".to_string()))
+        Ok((
+            "",
+            "Bind: let abc = fn (a, b) { Expr: (a + b); }".to_string()
+        ))
     );
 }
 
+// multi line code parser: list of statement
 pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
     many0(delimited(multispace0, statement, tag(";")))(i)
 }

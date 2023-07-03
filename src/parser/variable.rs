@@ -22,7 +22,7 @@ impl Display for Bind {
     }
 }
 
-// let a = 123
+// let a = 123 : let statement
 pub fn bind(i: &str) -> IResult<&str, Bind> {
     map(
         tuple((
@@ -50,6 +50,7 @@ fn bind_test() {
     )
 }
 
+// set value to the coresponding variable : assignment
 pub struct Set {
     pub name: String,
     pub value: Expr,
