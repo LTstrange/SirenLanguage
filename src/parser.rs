@@ -11,7 +11,7 @@ impl SirenParser {
     pub fn parse_file(input: &str) -> Result<Vec<Statement>, String> {
         match statements(input) {
             Ok((i, stmts)) if i.is_empty() => Ok(stmts),
-            Ok((i, _)) => unreachable!("Here has something left to parse: {}", i),
+            Ok((i, _)) => Err(format!("Here has something left to parse: {}", i)),
             Err(err) => Err(format!("{:?}", err)), // return the parse error
         }
     }
