@@ -53,19 +53,19 @@ impl Environment {
     fn eval_expr(&self, expr: Expr) -> Result<i64, &str> {
         match expr {
             Expr::Factor(f) => match f {
-                crate::parser::Value::Num(n) => Ok(n),
-                crate::parser::Value::Variable(id) => match self.get(&id) {
+                Value::Num(n) => Ok(n),
+                Value::Variable(id) => match self.get(&id) {
                     Some(n) => Ok(n),
                     None => Err("no such variable"),
                 },
-                crate::parser::Value::Function(_, _) => todo!(),
+                Value::Function(_args, _body) => todo!(),
             },
             Expr::UnExpr(_, n) => Ok(-self.eval_expr(*n)?),
             Expr::BinExpr(l, op, r) => match op {
-                crate::parser::Infix::Add => Ok(self.eval_expr(*l)? + self.eval_expr(*r)?),
-                crate::parser::Infix::Sub => Ok(self.eval_expr(*l)? - self.eval_expr(*r)?),
-                crate::parser::Infix::Mul => Ok(self.eval_expr(*l)? * self.eval_expr(*r)?),
-                crate::parser::Infix::Div => Ok(self.eval_expr(*l)? / self.eval_expr(*r)?),
+                Infix::Add => Ok(self.eval_expr(*l)? + self.eval_expr(*r)?),
+                Infix::Sub => Ok(self.eval_expr(*l)? - self.eval_expr(*r)?),
+                Infix::Mul => Ok(self.eval_expr(*l)? * self.eval_expr(*r)?),
+                Infix::Div => Ok(self.eval_expr(*l)? / self.eval_expr(*r)?),
             },
         }
     }
