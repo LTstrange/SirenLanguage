@@ -282,7 +282,7 @@ mod test {
             Ok(("", "Set: abc = (123 + 254)".to_string()))
         );
         assert_eq!(
-            statement("let abc = fn (a, b) {a + b;}").map(|(i, x)| (i, format!("{}", x))),
+            statement("let abc = fn (a, b) {  a + b;}").map(|(i, x)| (i, format!("{}", x))),
             Ok((
                 "",
                 "Bind: let abc = fn (a, b) { Expr: (a + b); }".to_string()
