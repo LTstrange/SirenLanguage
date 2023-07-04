@@ -74,7 +74,6 @@ impl Display for Statement {
 
 pub struct Bind {
     pub name: String,
-    // todo : add type check
     pub value: Expr,
 }
 

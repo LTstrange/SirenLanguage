@@ -1,10 +1,34 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parser::*;
+use crate::parser::{self, *};
+
+enum Value {
+    Int(i64),
+    Fn {
+        params: Vec<String>,
+        body: Vec<Statement>,
+    },
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Int(num) => write!(f, "{}", num),
+            Value::Fn { params, body } => write!(
+                f,
+                "fn ({}) {{ {}}}",
+                params.join(", "),
+                body.iter()
+                    .map(|stmt| format!("{}; ", stmt))
+                    .collect::<String>()
+            ),
+        }
+    }
+}
 
 #[derive(Default)]
 pub struct Environment {
-    variables: HashMap<String, i64>,
+    variables: HashMap<String, Value>,
 }
 
 impl Display for Environment {
@@ -50,18 +74,20 @@ impl Environment {
     }
 
     // evaluate expression
-    fn eval_expr(&self, expr: Expr) -> Result<i64, &str> {
+    fn eval_expr(&self, expr: Expr) -> Result<Value, &str> {
         match expr {
             Expr::Factor(f) => match f {
-                Value::Num(n) => Ok(n),
-                Value::Variable(id) => match self.get(&id) {
-                    Some(n) => Ok(n),
+                parser::Value::Num(n) => Ok(Value::Int(n)),
+                parser::Value::Variable(id) => match self.get(&id) {
+                    Some(n) => Ok(*n),
                     None => Err("no such variable"),
                 },
-                Value::Function(_args, _body) => todo!(),
+                parser::Value::Function(params, body) => todo!(),
             },
-            Expr::UnExpr(_, n) => Ok(-self.eval_expr(*n)?),
+            Expr::UnExpr(_, n) => Ok(self.eval_expr(*n).map(|Value::Int(n)| Value::Int(-n))?),
             Expr::BinExpr(l, op, r) => match op {
+                // todo : type check should be considered here!
+                // I need to complete type system for this!
                 Infix::Add => Ok(self.eval_expr(*l)? + self.eval_expr(*r)?),
                 Infix::Sub => Ok(self.eval_expr(*l)? - self.eval_expr(*r)?),
                 Infix::Mul => Ok(self.eval_expr(*l)? * self.eval_expr(*r)?),
@@ -75,7 +101,7 @@ impl Environment {
         if self.variables.contains_key(name) {
             return Err("Variable already exists");
         }
-        self.variables.insert(name.to_string(), value);
+        self.variables.insert(name.to_string(), Value::Int(value));
         Ok(())
     }
 
@@ -84,10 +110,10 @@ impl Environment {
         if !self.variables.contains_key(name) {
             return Err("Variable not exists");
         }
-        self.variables.insert(name.to_string(), value);
+        self.variables.insert(name.to_string(), Value::Int(value));
         Ok(())
     }
-    fn get(&self, name: &str) -> Option<i64> {
-        self.variables.get(name).cloned()
+    fn get(&self, name: &str) -> Option<&Value> {
+        self.variables.get(name).as_deref()
     }
 }
