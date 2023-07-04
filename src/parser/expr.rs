@@ -1,6 +1,3 @@
-use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
-
 use std::str::FromStr;
 
 use nom::character::complete::alpha1;
@@ -18,66 +15,7 @@ use nom::{
     IResult,
 };
 
-use super::statement::{statements, Statement};
-
-// todo : use a better way to construct ast structure
-// github : monkey-rs project
-
-pub enum Value {
-    Num(i64),
-    Variable(String),
-    Function(Vec<String>, Vec<Statement>),
-}
-
-pub enum Expr {
-    Factor(Value),
-    UnExpr(Prefix, Box<Expr>),
-    BinExpr(Box<Expr>, Infix, Box<Expr>),
-}
-
-pub enum Prefix {
-    Minus,
-}
-
-#[derive(Debug)]
-pub enum Infix {
-    Add,
-    Sub,
-    Mul,
-    Div,
-}
-
-impl Display for Expr {
-    fn fmt(&self, format: &mut Formatter<'_>) -> fmt::Result {
-        use self::Expr::*;
-        match self {
-            Factor(val) => match val {
-                Value::Num(n) => write!(format, "{}", n),
-                Value::Variable(v) => write!(format, "{}", v),
-                Value::Function(args, _stmts) => {
-                    write!(
-                        format,
-                        "fn ({}) {{ {}}}",
-                        args.join(", "),
-                        _stmts
-                            .iter()
-                            .map(|stmt| format!("{}; ", stmt))
-                            .collect::<String>()
-                    )
-                }
-            },
-            UnExpr(op, right) => match op {
-                Prefix::Minus => write!(format, "(-{})", right),
-            },
-            BinExpr(left, op, right) => match op {
-                Infix::Add => write!(format, "({} + {})", left, right),
-                Infix::Sub => write!(format, "({} - {})", left, right),
-                Infix::Mul => write!(format, "({} * {})", left, right),
-                Infix::Div => write!(format, "({} / {})", left, right),
-            },
-        }
-    }
-}
+use super::ast::*;
 
 pub fn identifier(i: &str) -> IResult<&str, Expr> {
     // variable
@@ -266,4 +204,134 @@ fn function_test() {
             "fn (x, y) { Expr: (x + y); Expr: (x - y); }".to_string()
         ))
     );
+}
+
+// oneline code parser
+pub fn statement(i: &str) -> IResult<&str, Statement> {
+    alt((
+        map(set, Statement::Set),   // set: "a = 123"
+        map(bind, Statement::Bind), // bind: "let a = 123"
+        map(expr, Statement::Expr), // expr: "(123 + 234) / 5"
+    ))(i)
+}
+
+#[test]
+fn statement_test() {
+    assert_eq!(
+        statement("let a = 123").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Bind: let a = 123".to_string()))
+    );
+    assert_eq!(
+        statement("123 + 254  ").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Expr: (123 + 254)".to_string()))
+    );
+    assert_eq!(
+        statement("let abc =123 + 254  ").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Bind: let abc = (123 + 254)".to_string()))
+    );
+    assert_eq!(
+        statement("abc =123 + 254 ").map(|(i, x)| (i, format!("{}", x))),
+        Ok(("", "Set: abc = (123 + 254)".to_string()))
+    );
+    assert_eq!(
+        statement("let abc = fn (a, b) {a + b;}").map(|(i, x)| (i, format!("{}", x))),
+        Ok((
+            "",
+            "Bind: let abc = fn (a, b) { Expr: (a + b); }".to_string()
+        ))
+    );
+}
+
+// multi line code parser: list of statement
+pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
+    many0(delimited(multispace, statement, tag(";")))(i)
+}
+
+#[test]
+fn statements_test() {
+    assert_eq!(
+        statements("  let a = 123 ;").map(|(i, stmts)| {
+            (
+                i,
+                stmts
+                    .iter()
+                    .map(|stmt| format!("{}", stmt))
+                    .collect::<Vec<String>>(),
+            )
+        }),
+        Ok(("", vec!["Bind: let a = 123".to_string(),],)),
+    );
+    assert_eq!(
+        statements("  let a = 123 ;   123 - 12 / 4  ; a= b  ;").map(|(i, stmts)| {
+            (
+                i,
+                stmts
+                    .iter()
+                    .map(|stmt| format!("{}", stmt))
+                    .collect::<Vec<String>>(),
+            )
+        }),
+        Ok((
+            "",
+            vec![
+                "Bind: let a = 123".to_string(),
+                "Expr: (123 - (12 / 4))".to_string(),
+                "Set: a = b".to_string()
+            ],
+        )),
+    );
+}
+
+// let a = 123 : let statement
+pub fn bind(i: &str) -> IResult<&str, Bind> {
+    map(
+        tuple((
+            tag("let"),
+            identifier,
+            delimited(multispace, tag("="), multispace),
+            expr,
+        )),
+        |(_, id, _, expr)| match id {
+            Expr::Factor(Value::Variable(s)) => Bind {
+                name: s,
+                value: expr,
+            },
+            _ => unreachable!(),
+        },
+    )
+    .parse(i)
+}
+
+#[test]
+fn bind_test() {
+    assert_eq!(
+        bind("let a = 123").map(|(i, b)| (i, format!("{}", b))),
+        Ok(("", "let a = 123".to_string()))
+    )
+}
+
+// a = 123
+pub fn set(i: &str) -> IResult<&str, Set> {
+    map(
+        tuple((
+            identifier,
+            delimited(multispace, tag("="), multispace),
+            expr,
+        )),
+        |(id, _, expr)| match id {
+            Expr::Factor(Value::Variable(s)) => Set {
+                name: s,
+                value: expr,
+            },
+            _ => unreachable!(),
+        },
+    )
+    .parse(i)
+}
+#[test]
+fn set_test() {
+    assert_eq!(
+        set("a = 123").map(|(i, b)| (i, format!("{}", b))),
+        Ok(("", "a = 123".to_string()))
+    )
 }

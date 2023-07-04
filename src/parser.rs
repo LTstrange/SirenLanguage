@@ -1,10 +1,8 @@
-use statement::{statement, Statement};
-
-use self::statement::statements;
-
 pub mod expr;
-pub mod statement;
-pub mod variable;
+
+mod ast;
+pub use ast::*;
+pub use expr::*;
 
 pub struct SirenParser;
 impl SirenParser {

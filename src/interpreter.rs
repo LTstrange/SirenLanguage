@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parser::{expr::Expr, statement::Statement};
+use crate::parser::*;
 
 #[derive(Default)]
 pub struct Environment {
@@ -53,19 +53,19 @@ impl Environment {
     fn eval_expr(&self, expr: Expr) -> Result<i64, &str> {
         match expr {
             Expr::Factor(f) => match f {
-                crate::parser::expr::Value::Num(n) => Ok(n),
-                crate::parser::expr::Value::Variable(id) => match self.get(&id) {
+                crate::parser::Value::Num(n) => Ok(n),
+                crate::parser::Value::Variable(id) => match self.get(&id) {
                     Some(n) => Ok(n),
                     None => Err("no such variable"),
                 },
-                crate::parser::expr::Value::Function(_, _) => todo!(),
+                crate::parser::Value::Function(_, _) => todo!(),
             },
             Expr::UnExpr(_, n) => Ok(-self.eval_expr(*n)?),
             Expr::BinExpr(l, op, r) => match op {
-                crate::parser::expr::Infix::Add => Ok(self.eval_expr(*l)? + self.eval_expr(*r)?),
-                crate::parser::expr::Infix::Sub => Ok(self.eval_expr(*l)? - self.eval_expr(*r)?),
-                crate::parser::expr::Infix::Mul => Ok(self.eval_expr(*l)? * self.eval_expr(*r)?),
-                crate::parser::expr::Infix::Div => Ok(self.eval_expr(*l)? / self.eval_expr(*r)?),
+                crate::parser::Infix::Add => Ok(self.eval_expr(*l)? + self.eval_expr(*r)?),
+                crate::parser::Infix::Sub => Ok(self.eval_expr(*l)? - self.eval_expr(*r)?),
+                crate::parser::Infix::Mul => Ok(self.eval_expr(*l)? * self.eval_expr(*r)?),
+                crate::parser::Infix::Div => Ok(self.eval_expr(*l)? / self.eval_expr(*r)?),
             },
         }
     }
