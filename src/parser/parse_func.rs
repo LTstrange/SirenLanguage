@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use nom::character::complete::alpha1;
-use nom::combinator::recognize;
+use nom::combinator::{opt, recognize};
 use nom::multi::separated_list0;
 use nom::sequence::tuple;
 use nom::Parser;
@@ -130,7 +130,18 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
 
 // multi line code parser: list of statement
 pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
-    many0(delimited(multispace, statement, tag(";")))(i)
+    map(
+        tuple((
+            many0(delimited(multispace, statement, tag(";"))),
+            opt(preceded(multispace, statement)),
+        )),
+        |(mut stmts, ret)| {
+            if let Some(ret) = ret {
+                stmts.push(ret);
+            }
+            stmts
+        },
+    )(i)
 }
 
 // let a = 123 : let statement
@@ -255,7 +266,7 @@ mod test {
     #[test]
     fn function_test() {
         assert_eq!(
-            function("fn(x, y) { x + y;  x - y;}").map(|(i, x)| (i, format!("{}", x))),
+            function("fn(x, y) { x + y;  x - y}").map(|(i, x)| (i, format!("{}", x))),
             Ok((
                 "",
                 "fn (x, y) { Expr: (x + y); Expr: (x - y); }".to_string()
