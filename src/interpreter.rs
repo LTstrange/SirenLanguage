@@ -2,12 +2,21 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::parser::{self, *};
 
-enum Value {
+pub enum Value {
     Int(i64),
     Fn {
         params: Vec<String>,
         body: Vec<Statement>,
     },
+}
+
+macro_rules! get_value {
+    ($value: expr, $type: ident) => {
+        match $value {
+            Value::$type(value) => Ok(value),
+            _ => Err("Not matched type".to_string()),
+        }
+    };
 }
 
 impl Display for Value {
@@ -46,7 +55,7 @@ impl Environment {
     }
 
     // evaluate oneline code
-    pub fn eval(&mut self, ast: Statement) -> Result<Option<i64>, String> {
+    pub fn eval(&mut self, ast: Statement) -> Result<Option<Value>, String> {
         match ast {
             Statement::Bind(bind) => {
                 let name = bind.name.clone();
@@ -74,46 +83,69 @@ impl Environment {
     }
 
     // evaluate expression
-    fn eval_expr(&self, expr: Expr) -> Result<Value, &str> {
+    fn eval_expr(&self, expr: Expr) -> Result<Value, String> {
         match expr {
             Expr::Factor(f) => match f {
                 parser::Value::Num(n) => Ok(Value::Int(n)),
                 parser::Value::Variable(id) => match self.get(&id) {
-                    Some(n) => Ok(*n),
-                    None => Err("no such variable"),
+                    Some(n) => match n {
+                        Value::Int(i) => Ok(Value::Int(*i)),
+                        Value::Fn { params, body } => Ok(Value::Fn {
+                            params: params.clone(),
+                            body: body.clone(),
+                        }),
+                    },
+                    None => Err("no such variable".to_string()),
                 },
-                parser::Value::Function(params, body) => todo!(),
+                parser::Value::Function(_params, _body) => todo!(),
             },
-            Expr::UnExpr(_, n) => Ok(self.eval_expr(*n).map(|Value::Int(n)| Value::Int(-n))?),
+            Expr::UnExpr(_, n) => Ok(Value::Int(-get_value!(self.eval_expr(*n)?, Int)?)),
             Expr::BinExpr(l, op, r) => match op {
                 // todo : type check should be considered here!
                 // I need to complete type system for this!
-                Infix::Add => Ok(self.eval_expr(*l)? + self.eval_expr(*r)?),
-                Infix::Sub => Ok(self.eval_expr(*l)? - self.eval_expr(*r)?),
-                Infix::Mul => Ok(self.eval_expr(*l)? * self.eval_expr(*r)?),
-                Infix::Div => Ok(self.eval_expr(*l)? / self.eval_expr(*r)?),
+                Infix::Add => eval_add(self.eval_expr(*l)?, self.eval_expr(*r)?),
+                Infix::Sub => eval_sub(self.eval_expr(*l)?, self.eval_expr(*r)?),
+                Infix::Mul => eval_mul(self.eval_expr(*l)?, self.eval_expr(*r)?),
+                Infix::Div => eval_div(self.eval_expr(*l)?, self.eval_expr(*r)?),
             },
         }
     }
 
     // bind variable to the variable table
-    fn bind(&mut self, name: &str, value: i64) -> Result<(), &str> {
+    fn bind(&mut self, name: &str, value: Value) -> Result<(), &str> {
         if self.variables.contains_key(name) {
             return Err("Variable already exists");
         }
-        self.variables.insert(name.to_string(), Value::Int(value));
+        self.variables.insert(name.to_string(), value);
         Ok(())
     }
 
     // set(update) variable in the variable table
-    fn set(&mut self, name: &str, value: i64) -> Result<(), &str> {
+    fn set(&mut self, name: &str, value: Value) -> Result<(), &str> {
+        // todo : add type check here!
         if !self.variables.contains_key(name) {
             return Err("Variable not exists");
         }
-        self.variables.insert(name.to_string(), Value::Int(value));
+        self.variables.insert(name.to_string(), value);
         Ok(())
     }
     fn get(&self, name: &str) -> Option<&Value> {
-        self.variables.get(name).as_deref()
+        self.variables.get(name)
     }
+}
+
+fn eval_add(left: Value, right: Value) -> Result<Value, String> {
+    Ok(Value::Int(get_value!(left, Int)? + get_value!(right, Int)?))
+}
+
+fn eval_sub(left: Value, right: Value) -> Result<Value, String> {
+    Ok(Value::Int(get_value!(left, Int)? - get_value!(right, Int)?))
+}
+
+fn eval_mul(left: Value, right: Value) -> Result<Value, String> {
+    Ok(Value::Int(get_value!(left, Int)? * get_value!(right, Int)?))
+}
+
+fn eval_div(left: Value, right: Value) -> Result<Value, String> {
+    Ok(Value::Int(get_value!(left, Int)? / get_value!(right, Int)?))
 }

@@ -1,22 +1,25 @@
 use std::fmt::{self, Display, Formatter};
 
+#[derive(Clone)]
 pub enum Value {
     Num(i64),
     Variable(String),
     Function(Vec<String>, Vec<Statement>),
 }
 
+#[derive(Clone)]
 pub enum Expr {
     Factor(Value),
     UnExpr(Prefix, Box<Expr>),
     BinExpr(Box<Expr>, Infix, Box<Expr>),
 }
 
+#[derive(Clone)]
 pub enum Prefix {
     Minus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Infix {
     Add,
     Sub,
@@ -56,6 +59,7 @@ impl Display for Expr {
     }
 }
 
+#[derive(Clone)]
 pub enum Statement {
     Bind(Bind),
     Expr(Expr),
@@ -72,6 +76,7 @@ impl Display for Statement {
     }
 }
 
+#[derive(Clone)]
 pub struct Bind {
     pub name: String,
     pub value: Expr,
@@ -84,6 +89,7 @@ impl Display for Bind {
 }
 
 // set value to the coresponding variable : assignment
+#[derive(Clone)]
 pub struct Set {
     pub name: String,
     pub value: Expr,
