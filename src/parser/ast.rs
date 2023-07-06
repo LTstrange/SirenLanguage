@@ -61,7 +61,7 @@ impl Display for Expr {
 
 #[derive(Clone)]
 pub enum Statement {
-    Bind(Bind),
+    Let(Let),
     Expr(Expr),
     Set(Set),
 }
@@ -69,7 +69,7 @@ pub enum Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Bind(bind) => write!(f, "Bind: {}", bind),
+            Statement::Let(bind) => write!(f, "Bind: {}", bind),
             Statement::Expr(expr) => write!(f, "Expr: {}", expr),
             Statement::Set(set) => write!(f, "Set: {}", set),
         }
@@ -77,12 +77,12 @@ impl Display for Statement {
 }
 
 #[derive(Clone)]
-pub struct Bind {
+pub struct Let {
     pub name: String,
     pub value: Expr,
 }
 
-impl Display for Bind {
+impl Display for Let {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "let {} = {}", self.name, self.value)
     }

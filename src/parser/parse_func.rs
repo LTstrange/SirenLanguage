@@ -123,7 +123,7 @@ pub fn expr(i: &str) -> IResult<&str, Expr> {
 pub fn statement(i: &str) -> IResult<&str, Statement> {
     alt((
         map(set, Statement::Set),   // set: "a = 123"
-        map(bind, Statement::Bind), // bind: "let a = 123"
+        map(bind, Statement::Let),  // bind: "let a = 123"
         map(expr, Statement::Expr), // expr: "(123 + 234) / 5"
     ))(i)
 }
@@ -134,7 +134,7 @@ pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
 }
 
 // let a = 123 : let statement
-pub fn bind(i: &str) -> IResult<&str, Bind> {
+pub fn bind(i: &str) -> IResult<&str, Let> {
     map(
         tuple((
             tag("let"),
@@ -143,7 +143,7 @@ pub fn bind(i: &str) -> IResult<&str, Bind> {
             expr,
         )),
         |(_, id, _, expr)| match id {
-            Expr::Factor(Value::Variable(s)) => Bind {
+            Expr::Factor(Value::Variable(s)) => Let {
                 name: s,
                 value: expr,
             },

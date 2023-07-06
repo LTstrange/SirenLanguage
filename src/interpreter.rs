@@ -57,7 +57,7 @@ impl Environment {
     // evaluate oneline code
     pub fn eval(&mut self, ast: Statement) -> Result<Option<Value>, String> {
         match ast {
-            Statement::Bind(bind) => {
+            Statement::Let(bind) => {
                 let name = bind.name.clone();
                 let value = self.eval_expr(bind.value);
                 match value {
