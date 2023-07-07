@@ -65,7 +65,7 @@ impl Environment {
                         self.bind(&name, v)?;
                         Ok(None)
                     }
-                    Err(e) => Err(e.to_string()),
+                    Err(e) => Err(e),
                 }
             }
             Statement::Expr(expr) => Ok(Some(self.eval_expr(expr)?)),
@@ -76,7 +76,7 @@ impl Environment {
                         self.set(&set.name, v)?;
                         Ok(None)
                     }
-                    Err(e) => Err(e.to_string()),
+                    Err(e) => Err(e),
                 }
             }
         }
