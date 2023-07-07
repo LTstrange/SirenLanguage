@@ -33,7 +33,10 @@ b = -39
 ## Todolist
 
 1. minimum REPL
-  - [x] minimum amount of datatype: int
+  - [x] minimum amount of datatype
+    - [x] int
+    - [x] fn
+    - [ ] bool
   - [x] expressions:
     - Infix: `+ - * /`
     - Prefix: `-`
@@ -48,6 +51,6 @@ b = -39
   - [ ] variable table type system
   - [ ] fn (function):
     - [x] fn parser
+    - [x] bind function
+    - [ ] fn call
     - [ ] return statement
-    - [ ] fn interpreter
-      - [ ] bind function
