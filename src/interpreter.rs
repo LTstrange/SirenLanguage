@@ -97,7 +97,7 @@ impl Environment {
                     },
                     None => Err("no such variable".to_string()),
                 },
-                parser::Value::Function(_params, _body) => todo!(),
+                parser::Value::Function(params, body) => Ok(Value::Fn { params, body }),
             },
             Expr::UnExpr(_, n) => Ok(Value::Int(-get_value!(self.eval_expr(*n)?, Int)?)),
             Expr::BinExpr(l, op, r) => match op {
