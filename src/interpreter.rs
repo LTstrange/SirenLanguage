@@ -66,7 +66,7 @@ impl Environment {
                 self.set(&name, self.eval_expr(value)?)?;
                 Ok(None)
             }
-            Statement::Return(ret) => todo!(),
+            Statement::Return(_) => Err("Err: Return statement not supported".to_string()),
         }
     }
 
@@ -110,12 +110,19 @@ impl Environment {
     }
 
     // set(update) variable in the variable table
-    fn set(&mut self, name: &str, value: Value) -> Result<(), &str> {
-        // todo : add type check here!
+    fn set(&mut self, name: &str, value: Value) -> Result<(), String> {
         if !self.variables.contains_key(name) {
-            return Err("Variable not exists");
+            return Err("Variable not exists".to_string());
         }
-        self.variables.insert(name.to_string(), value);
+        match self.variables.get_mut(name) {
+            Some(origin) => match origin {
+                Value::Int(_) => *origin = value,
+                Value::Fn { .. } => {
+                    *origin = value;
+                }
+            },
+            None => return Err("Variable not exists".to_string()),
+        }
         Ok(())
     }
     fn get(&self, name: &str) -> Option<&Value> {
