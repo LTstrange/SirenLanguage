@@ -193,31 +193,31 @@ mod test {
     #[test]
     fn factor_test() {
         assert_eq!(
-            factor("  3  ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", String::from("3")))
+            factor("  3  ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "3".to_string()))
         );
     }
 
     #[test]
     fn term_test() {
         assert_eq!(
-            term(" 3 *  5   ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", String::from("(3 * 5)")))
+            term(" 3 *  5   ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "(3 * 5)".to_string()))
         );
     }
 
     #[test]
     fn expr_test() {
         assert_eq!(
-            expr(" 1 + 2 *  3 ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", String::from("(1 + (2 * 3))")))
+            expr(" 1 + 2 *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "(1 + (2 * 3))".to_string()))
         );
         assert_eq!(
-            expr(" 1 + 2 *  3 / 4 - 5 ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", String::from("((1 + ((2 * 3) / 4)) - 5)")))
+            expr(" 1 + 2 *  3 / 4 - 5 ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "((1 + ((2 * 3) / 4)) - 5)".to_string()))
         );
         assert_eq!(
-            expr(" 72 / 2 / 3 ").map(|(i, x)| (i, format!("{}", x))),
+            expr(" 72 / 2 / 3 ").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("((72 / 2) / 3)")))
         );
     }
@@ -225,7 +225,7 @@ mod test {
     #[test]
     fn parens_test() {
         assert_eq!(
-            expr(" ( 1 + 2 ) *  3 ").map(|(i, x)| (i, format!("{}", x))),
+            expr(" ( 1 + 2 ) *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("((1 + 2) * 3)")))
         );
     }
@@ -233,19 +233,19 @@ mod test {
     #[test]
     fn unary_test() {
         assert_eq!(
-            expr(" - 1 ").map(|(i, x)| (i, format!("{}", x))),
+            expr(" - 1 ").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("(-1)")))
         );
         assert_eq!(
-            expr("2 * -1").map(|(i, x)| (i, format!("{}", x))),
+            expr("2 * -1").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("(2 * (-1))")))
         );
         assert_eq!(
-            expr("-(2 * 1)").map(|(i, x)| (i, format!("{}", x))),
+            expr("-(2 * 1)").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("(-(2 * 1))")))
         );
         assert_eq!(
-            expr("-1 + 3").map(|(i, x)| (i, format!("{}", x))),
+            expr("-1 + 3").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("((-1) + 3)")))
         );
     }
@@ -253,15 +253,15 @@ mod test {
     #[test]
     fn identifier_test() {
         assert_eq!(
-            expr("x").map(|(i, x)| (i, format!("{}", x))),
+            expr("x").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("x")))
         );
         assert_eq!(
-            expr("2 + x").map(|(i, x)| (i, format!("{}", x))),
+            expr("2 + x").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("(2 + x)")))
         );
         assert_eq!(
-            expr("-x").map(|(i, x)| (i, format!("{}", x))),
+            expr("-x").map(|(i, x)| (i, format!("{:?}", x))),
             Ok(("", String::from("(-x)")))
         );
     }
@@ -269,38 +269,32 @@ mod test {
     #[test]
     fn function_test() {
         assert_eq!(
-            function("fn(x, y) { x + y;  x - y}").map(|(i, x)| (i, format!("{}", x))),
-            Ok((
-                "",
-                "fn (x, y) { Expr: (x + y); Expr: (x - y); }".to_string()
-            ))
+            function("fn(x, y) { x + y;  x - y}").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "fn(x, y) { expr (x + y); return (x - y); }".to_string()))
         );
     }
 
     #[test]
     fn statement_test() {
         assert_eq!(
-            statement("let a = 123").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", "Bind: let a = 123".to_string()))
+            statement("let a = 123").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "let a = 123".to_string()))
         );
         assert_eq!(
-            statement("123 + 254  ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", "Expr: (123 + 254)".to_string()))
+            statement("123 + 254  ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "expr (123 + 254)".to_string()))
         );
         assert_eq!(
-            statement("let abc =123 + 254  ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", "Bind: let abc = (123 + 254)".to_string()))
+            statement("let abc =123 + 254  ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "let abc = (123 + 254)".to_string()))
         );
         assert_eq!(
-            statement("abc =123 + 254 ").map(|(i, x)| (i, format!("{}", x))),
-            Ok(("", "Set: abc = (123 + 254)".to_string()))
+            statement("abc =123 + 254 ").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "set abc = (123 + 254)".to_string()))
         );
         assert_eq!(
-            statement("let abc = fn (a, b) {  a + b;}").map(|(i, x)| (i, format!("{}", x))),
-            Ok((
-                "",
-                "Bind: let abc = fn (a, b) { Expr: (a + b); }".to_string()
-            ))
+            statement("let abc = fn (a, b) {  a + b;}").map(|(i, x)| (i, format!("{:?}", x))),
+            Ok(("", "let abc = fn(a, b) { expr (a + b); }".to_string()))
         );
     }
 
@@ -312,11 +306,11 @@ mod test {
                     i,
                     stmts
                         .iter()
-                        .map(|stmt| format!("{}", stmt))
+                        .map(|stmt| format!("{:?}", stmt))
                         .collect::<Vec<String>>(),
                 )
             }),
-            Ok(("", vec!["Bind: let a = 123".to_string(),],)),
+            Ok(("", vec!["let a = 123".to_string(),],)),
         );
         assert_eq!(
             statements("  let a = 123 ;   123 - 12 / 4  ; a= b  ;").map(|(i, stmts)| {
@@ -324,16 +318,16 @@ mod test {
                     i,
                     stmts
                         .iter()
-                        .map(|stmt| format!("{}", stmt))
+                        .map(|stmt| format!("{:?}", stmt))
                         .collect::<Vec<String>>(),
                 )
             }),
             Ok((
                 "",
                 vec![
-                    "Bind: let a = 123".to_string(),
-                    "Expr: (123 - (12 / 4))".to_string(),
-                    "Set: a = b".to_string()
+                    "let a = 123".to_string(),
+                    "expr (123 - (12 / 4))".to_string(),
+                    "set a = b".to_string()
                 ],
             )),
         );
@@ -342,15 +336,15 @@ mod test {
     #[test]
     fn bind_test() {
         assert_eq!(
-            bind("let a = 123").map(|(i, b)| (i, format!("{}", b))),
+            bind("let a = 123").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "let a = 123".to_string()))
         )
     }
     #[test]
     fn set_test() {
         assert_eq!(
-            set("a = 123").map(|(i, b)| (i, format!("{}", b))),
-            Ok(("", "a = 123".to_string()))
+            set("a = 123").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "set a = 123".to_string()))
         )
     }
 }
