@@ -139,8 +139,8 @@ pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
             opt(preceded(multispace, statement)),
         )),
         |(mut stmts, ret)| {
-            if let Some(ret) = ret {
-                stmts.push(ret);
+            if let Some(Statement::Expr(expr)) = ret {
+                stmts.push(Statement::Return(expr));
             }
             stmts
         },
