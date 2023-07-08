@@ -125,8 +125,8 @@ pub fn expr(i: &str) -> IResult<&str, Expr> {
 // oneline code parser
 pub fn statement(i: &str) -> IResult<&str, Statement> {
     alt((
-        set,                        // set: "a = 123"
-        bind,                       // bind: "let a = 123"
+        set_stmt,                   // set: "a = 123"
+        let_stmt,                   // bind: "let a = 123"
         map(expr, Statement::Expr), // expr: "(123 + 234) / 5"
     ))(i)
 }
@@ -148,7 +148,7 @@ pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
 }
 
 // let a = 123 : let statement
-pub fn bind(i: &str) -> IResult<&str, Statement> {
+pub fn let_stmt(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((
             tag("let"),
@@ -168,7 +168,7 @@ pub fn bind(i: &str) -> IResult<&str, Statement> {
 }
 
 // a = 123
-pub fn set(i: &str) -> IResult<&str, Statement> {
+pub fn set_stmt(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((
             identifier,
@@ -336,14 +336,14 @@ mod test {
     #[test]
     fn bind_test() {
         assert_eq!(
-            bind("let a = 123").map(|(i, b)| (i, format!("{:?}", b))),
+            let_stmt("let a = 123").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "let a = 123".to_string()))
         )
     }
     #[test]
     fn set_test() {
         assert_eq!(
-            set("a = 123").map(|(i, b)| (i, format!("{:?}", b))),
+            set_stmt("a = 123").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "set a = 123".to_string()))
         )
     }
