@@ -1,20 +1,43 @@
+use std::fmt::{self, Debug, Formatter};
+
 pub type Program = Vec<Statement>;
 
-#[derive(Clone)]
+#[derive(PartialEq, Clone)]
 pub enum Statement {
     Let { name: String, value: Expr },
     Expr(Expr),
     Set { name: String, value: Expr },
+    Return(Expr),
 }
 
-#[derive(Clone)]
+impl Debug for Statement {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Statement::Let { name, value } => write!(f, "let {} = {:?}", name, value),
+            Statement::Expr(expr) => write!(f, "expr {:?}", expr),
+            Statement::Set { name, value } => write!(f, "set {} = {:?}", name, value),
+            Statement::Return(ret) => write!(f, "return {:?}", ret),
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
 pub enum Literal {
     Int(i64),
     Bool(bool),
     // Str(String),
 }
+impl Debug for Literal {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Literal::Int(i) => write!(f, "{}", i),
+            Literal::Bool(b) => write!(f, "{}", b),
+            // Literal::Str(s) => write!(f, "{}", s),
+        }
+    }
+}
 
-#[derive(Clone)]
+#[derive(PartialEq, Clone)]
 pub enum Expr {
     Ident(String),
     Literal(Literal),
@@ -23,12 +46,41 @@ pub enum Expr {
     Function { params: Vec<String>, body: Program },
 }
 
-#[derive(Clone)]
+impl Debug for Expr {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Expr::Ident(name) => write!(f, "{}", name),
+            Expr::Literal(l) => write!(f, "{:?}", l),
+            Expr::UnExpr(op, e) => write!(f, "({:?}{:?})", op, e),
+            Expr::BinExpr(l, op, r) => write!(f, "({:?} {:?} {:?})", l, op, r),
+            Expr::Function { params, body } => {
+                write!(
+                    f,
+                    "fn({}) {{ {}}}",
+                    params.join(", "),
+                    body.iter()
+                        .map(|stmt| format!("{:?}; ", stmt))
+                        .collect::<String>()
+                )
+            }
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
 pub enum Prefix {
     Minus,
 }
 
-#[derive(Debug, Clone)]
+impl Debug for Prefix {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match *self {
+            Prefix::Minus => write!(f, "-"),
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
 pub enum Infix {
     Add,
     Sub,
@@ -36,58 +88,13 @@ pub enum Infix {
     Div,
 }
 
-// impl Display for Expr {
-//     fn fmt(&self, format: &mut Formatter<'_>) -> fmt::Result {
-//         use self::Expr::*;
-//         match self {
-//             Factor(val) => match val {
-//                 Value::Num(n) => write!(format, "{}", n),
-//                 Value::Variable(v) => write!(format, "{}", v),
-//                 Value::Function(args, _stmts) => {
-//                     write!(
-//                         format,
-//                         "fn ({}) {{ {}}}",
-//                         args.join(", "),
-//                         _stmts
-//                             .iter()
-//                             .map(|stmt| format!("{}; ", stmt))
-//                             .collect::<String>()
-//                     )
-//                 }
-//             },
-//             UnExpr(op, right) => match op {
-//                 Prefix::Minus => write!(format, "(-{})", right),
-//             },
-//             BinExpr(left, op, right) => match op {
-//                 Infix::Add => write!(format, "({} + {})", left, right),
-//                 Infix::Sub => write!(format, "({} - {})", left, right),
-//                 Infix::Mul => write!(format, "({} * {})", left, right),
-//                 Infix::Div => write!(format, "({} / {})", left, right),
-//             },
-//         }
-//     }
-// }
-
-// impl Display for Statement {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Statement::Let(bind) => write!(f, "Bind: {}", bind),
-//             Statement::Expr(expr) => write!(f, "Expr: {}", expr),
-//             Statement::Set(set) => write!(f, "Set: {}", set),
-//         }
-//     }
-// }
-
-// impl Display for Let {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "let {} = {}", self.name, self.value)
-//     }
-// }
-
-// set value to the coresponding variable : assignment
-
-// impl Display for Set {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{} = {}", self.name, self.value)
-//     }
-// }
+impl Debug for Infix {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Infix::Add => write!(f, "+"),
+            Infix::Sub => write!(f, "-"),
+            Infix::Mul => write!(f, "*"),
+            Infix::Div => write!(f, "/"),
+        }
+    }
+}
