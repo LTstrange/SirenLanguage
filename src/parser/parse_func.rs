@@ -20,7 +20,7 @@ use super::ast::*;
 pub fn identifier(i: &str) -> IResult<&str, Expr> {
     // variable
     map(delimited(multispace, alpha1, multispace), |s: &str| {
-        Expr::Factor(Value::Variable(s.to_string()))
+        Expr::Ident(s.to_string())
     })
     .parse(i)
 }
@@ -28,14 +28,14 @@ pub fn identifier(i: &str) -> IResult<&str, Expr> {
 fn number(i: &str) -> IResult<&str, Expr> {
     map(
         map_res(delimited(multispace, digit, multispace), FromStr::from_str),
-        |n: i64| Expr::Factor(Value::Num(n)),
+        |n: i64| Expr::Literal(Literal::Int(n)),
     )
     .parse(i)
 }
 
 fn function(i: &str) -> IResult<&str, Expr> {
     // arguments
-    let (i, args) = preceded(
+    let (i, params) = preceded(
         tuple((multispace, tag("fn"), multispace)),
         // tuple of arguments
         delimited(
@@ -45,13 +45,16 @@ fn function(i: &str) -> IResult<&str, Expr> {
         ),
     )(i)?;
     // statements
-    let (i, stmts) = delimited(
+    let (i, body) = delimited(
         tuple((multispace, tag("{"))),
         statements,
         tuple((multispace, tag("}"), multispace)),
     )(i)?;
-    let args = args.into_iter().map(|arg| arg.trim().to_string()).collect();
-    Ok((i, Expr::Factor(Value::Function(args, stmts))))
+    let params = params
+        .into_iter()
+        .map(|arg| arg.trim().to_string())
+        .collect();
+    Ok((i, Expr::Function { params, body }))
 }
 
 fn parens(i: &str) -> IResult<&str, Expr> {
@@ -122,8 +125,8 @@ pub fn expr(i: &str) -> IResult<&str, Expr> {
 // oneline code parser
 pub fn statement(i: &str) -> IResult<&str, Statement> {
     alt((
-        map(set, Statement::Set),   // set: "a = 123"
-        map(bind, Statement::Let),  // bind: "let a = 123"
+        set,                        // set: "a = 123"
+        bind,                       // bind: "let a = 123"
         map(expr, Statement::Expr), // expr: "(123 + 234) / 5"
     ))(i)
 }
@@ -145,7 +148,7 @@ pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
 }
 
 // let a = 123 : let statement
-pub fn bind(i: &str) -> IResult<&str, Let> {
+pub fn bind(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((
             tag("let"),
@@ -154,7 +157,7 @@ pub fn bind(i: &str) -> IResult<&str, Let> {
             expr,
         )),
         |(_, id, _, expr)| match id {
-            Expr::Factor(Value::Variable(s)) => Let {
+            Expr::Ident(s) => Statement::Let {
                 name: s,
                 value: expr,
             },
@@ -165,7 +168,7 @@ pub fn bind(i: &str) -> IResult<&str, Let> {
 }
 
 // a = 123
-pub fn set(i: &str) -> IResult<&str, Set> {
+pub fn set(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((
             identifier,
@@ -173,7 +176,7 @@ pub fn set(i: &str) -> IResult<&str, Set> {
             expr,
         )),
         |(id, _, expr)| match id {
-            Expr::Factor(Value::Variable(s)) => Set {
+            Expr::Ident(s) => Statement::Set {
                 name: s,
                 value: expr,
             },
