@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parser::{self, *};
+use crate::parser::*;
 
 pub enum Value {
     Int(i64),
@@ -28,7 +28,7 @@ impl Display for Value {
                 "fn ({}) {{ {}}}",
                 params.join(", "),
                 body.iter()
-                    .map(|stmt| format!("{}; ", stmt))
+                    .map(|stmt| format!("{:?}; ", stmt))
                     .collect::<String>()
             ),
         }
@@ -57,48 +57,37 @@ impl Environment {
     // evaluate oneline code
     pub fn eval(&mut self, ast: Statement) -> Result<Option<Value>, String> {
         match ast {
-            Statement::Let(bind) => {
-                let name = bind.name.clone();
-                let value = self.eval_expr(bind.value);
-                match value {
-                    Ok(v) => {
-                        self.bind(&name, v)?;
-                        Ok(None)
-                    }
-                    Err(e) => Err(e),
-                }
+            Statement::Let { name, value } => {
+                self.bind(&name, self.eval_expr(value)?)?;
+                Ok(None)
             }
             Statement::Expr(expr) => Ok(Some(self.eval_expr(expr)?)),
-            Statement::Set(set) => {
-                let value = self.eval_expr(set.value);
-                match value {
-                    Ok(v) => {
-                        self.set(&set.name, v)?;
-                        Ok(None)
-                    }
-                    Err(e) => Err(e),
-                }
+            Statement::Set { name, value } => {
+                self.set(&name, self.eval_expr(value)?)?;
+                Ok(None)
             }
+            Statement::Return(ret) => todo!(),
         }
     }
 
     // evaluate expression
     fn eval_expr(&self, expr: Expr) -> Result<Value, String> {
         match expr {
-            Expr::Factor(f) => match f {
-                parser::Value::Num(n) => Ok(Value::Int(n)),
-                parser::Value::Variable(id) => match self.get(&id) {
-                    Some(n) => match n {
-                        Value::Int(i) => Ok(Value::Int(*i)),
-                        Value::Fn { params, body } => Ok(Value::Fn {
-                            params: params.clone(),
-                            body: body.clone(),
-                        }),
-                    },
-                    None => Err("no such variable".to_string()),
+            Expr::Ident(ident) => match self.get(&ident) {
+                Some(n) => match n {
+                    Value::Int(i) => Ok(Value::Int(*i)),
+                    Value::Fn { params, body } => Ok(Value::Fn {
+                        params: params.clone(),
+                        body: body.clone(),
+                    }),
                 },
-                parser::Value::Function(params, body) => Ok(Value::Fn { params, body }),
+                None => Err("no such variable".to_string()),
             },
+            Expr::Literal(literal) => match literal {
+                Literal::Int(n) => Ok(Value::Int(n)),
+                Literal::Bool(_) => todo!(),
+            },
+            Expr::Function { params, body } => Ok(Value::Fn { params, body }),
             Expr::UnExpr(_, n) => Ok(Value::Int(-get_value!(self.eval_expr(*n)?, Int)?)),
             Expr::BinExpr(l, op, r) => match op {
                 // todo : type check should be considered here!
