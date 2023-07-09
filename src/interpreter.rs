@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display, iter::zip};
 
 use crate::parser::*;
 
@@ -99,18 +99,18 @@ impl Environment {
                 Infix::Div => eval_div(self.eval_expr(l)?, self.eval_expr(r)?),
             },
             Expr::Call { func, args } => match func.as_ref() {
-                Expr::Ident(func) => {
-                    let func = self.get(func).ok_or("no such function")?;
+                Expr::Ident(func_name) => {
+                    let func = self.get(func_name).ok_or("no such function")?;
                     let (params, body) = match func {
                         Value::Fn { params, body } => Ok((params, body)),
                         _ => Err("this is not a function".to_string()),
                     }?;
-                    let mut result = vec![];
-                    for (i, param) in params.iter().enumerate() {
-                        let arg = self.eval_expr(&args[i])?;
-                        result.push((param.clone(), arg));
-                    }
-                    eval_func(result, body)
+
+                    let args = args
+                        .iter()
+                        .map(|arg| self.eval_expr(arg))
+                        .collect::<Result<Vec<Value>, String>>()?;
+                    eval_func(params, args, body, func_name)
                 }
                 Expr::Function { params, body } => todo!(),
                 _ => Err("Calling non-function".to_string()),
@@ -164,10 +164,22 @@ fn eval_div(left: Value, right: Value) -> Result<Value, String> {
     Ok(Value::Int(get_value!(left, Int)? / get_value!(right, Int)?))
 }
 
-fn eval_func(params: Vec<(String, Value)>, body: &Vec<Statement>) -> Result<Value, String> {
+fn eval_func(
+    params: &Vec<String>,
+    args: Vec<Value>,
+    body: &Vec<Statement>,
+    self_func: &str,
+) -> Result<Value, String> {
     let mut env = Environment::new();
-    for (name, value) in params {
-        env.bind(&name, value)?;
+    env.bind(
+        self_func,
+        Value::Fn {
+            params: params.to_vec(),
+            body: body.to_vec(),
+        },
+    )?;
+    for (param, arg) in zip(params, args) {
+        env.bind(param, arg)?;
     }
     let mut result: Option<Value> = None;
     for stmt in body {
