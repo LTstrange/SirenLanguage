@@ -53,13 +53,12 @@ fn file_interpreter(env: &mut Environment, file_name: &str) {
     println!("Content:");
     println!("{}", content);
     match run_file(env, content) {
-        Ok(()) => (),
+        Ok(()) => println!("Done."),
         Err(msg) => {
             println!("{}", format!("Error: {}", msg).red());
-            return;
         } // print error
     }
-    println!("Done.");
+
     println!("Env:"); // print variables in the environment
     println!("{}", env);
 }
