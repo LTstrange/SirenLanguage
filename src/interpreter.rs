@@ -73,7 +73,7 @@ impl Environment {
     // evaluate expression
     fn eval_expr(&self, expr: &Expr) -> Result<Value, String> {
         match expr {
-            Expr::Ident(ident) => match self.get(&ident) {
+            Expr::Ident(ident) => match self.get(ident) {
                 Some(n) => match n {
                     Value::Int(i) => Ok(Value::Int(*i)),
                     Value::Fn { params, body } => Ok(Value::Fn {
@@ -93,8 +93,6 @@ impl Environment {
             }),
             Expr::UnExpr(_, ref n) => Ok(Value::Int(-get_value!(self.eval_expr(n)?, Int)?)),
             Expr::BinExpr(ref l, op, ref r) => match op {
-                // todo : type check should be considered here!
-                // I need to complete type system for this!
                 Infix::Add => eval_add(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Sub => eval_sub(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Mul => eval_mul(self.eval_expr(l)?, self.eval_expr(r)?),
