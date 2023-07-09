@@ -33,6 +33,13 @@ fn number(i: &str) -> IResult<&str, Expr> {
     .parse(i)
 }
 
+fn boolean(i: &str) -> IResult<&str, Expr> {
+    alt((
+        map(tag("true"), |_| Expr::Literal(Literal::Bool(true))),
+        map(tag("false"), |_| Expr::Literal(Literal::Bool(false))),
+    ))(i)
+}
+
 fn function(i: &str) -> IResult<&str, Expr> {
     // arguments
     let (i, params) = preceded(
@@ -82,6 +89,7 @@ fn factor(i: &str) -> IResult<&str, Expr> {
         call,
         identifier,
         number,
+        boolean,
         map(
             delimited(
                 multispace,
@@ -390,5 +398,17 @@ mod test {
             return_stmt("return 123").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "return 123".to_string()))
         )
+    }
+
+    #[test]
+    fn boolean_test() {
+        assert_eq!(
+            boolean("true").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "true".to_string()))
+        );
+        assert_eq!(
+            boolean("false").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "false".to_string()))
+        );
     }
 }
