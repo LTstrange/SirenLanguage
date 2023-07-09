@@ -13,9 +13,13 @@ REPL: `cargo r`
 > let b = (-a + 42) / 2
 > b
 -39
->
+> !false
+true
+> true
+true
 ```
-test1.siren
+File interpret: `cargo r test1.siren`
+test1.siren:
 ```
 let a = 123 - 12 / 4;
 let b = (-a + 42) / 2;
@@ -30,8 +34,7 @@ let one = fn () {
 
 let c = add(a, b);
 ```
-
-File output: `cargo r test1.siren`
+output:
 ```
 Content:
 let a = 123 - 12 / 4;
@@ -50,24 +53,20 @@ b = -39
 ## Todolist
 
 1. minimum REPL
-  - [x] minimum amount of datatype
-    - [x] int
-    - [x] fn
+  - [x] minimum amount of datatype: int, fn
     - [ ] bool
   - [x] expressions:
     - Infix: `+ - * /`
     - Prefix: `-`
   - [x] variables(identifier): `abc foo bar`
-    - [x] identifier parser
-    - [x] variable table
-    - [x] let statement
-    - [x] assign statement
+    - let statement
+    - set statement
 
 2. minimum interpreter for file
-  - [x] read and interprete file
-  - [x] variable table type system
+  - [x] variable type system
   - [x] fn (function):
     - [x] fn parser
     - [x] bind function
     - [x] fn call
     - [x] return statement
+    - [ ] anonymous function call (need a better way to parse expression)
