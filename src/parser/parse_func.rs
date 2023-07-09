@@ -87,9 +87,9 @@ fn factor(i: &str) -> IResult<&str, Expr> {
     alt((
         function,
         call,
-        identifier,
-        number,
         boolean,
+        number,
+        identifier,
         map(
             delimited(
                 multispace,
