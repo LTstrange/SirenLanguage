@@ -24,6 +24,10 @@ let add = fn (a, b) {
     return a + b;
 };
 
+let one = fn () {
+    1
+};
+
 let c = add(a, b);
 ```
 
@@ -36,10 +40,11 @@ let b = (-a + 42) / 2;
 let c = add(a, b);
 Done.
 Env:
-c = 81
-b = -39
-a = 120
 add = fn (a, b) { return (a + b); }
+one = fn () { return 1; }
+c = 81
+a = 120
+b = -39
 ```
 
 ## Todolist

@@ -4,6 +4,7 @@ use crate::parser::*;
 
 pub enum Value {
     Int(i64),
+    Bool(bool),
     Fn {
         params: Vec<String>,
         body: Vec<Statement>,
@@ -31,6 +32,7 @@ impl Display for Value {
                     .map(|stmt| format!("{:?}; ", stmt))
                     .collect::<String>()
             ),
+            Value::Bool(b) => write!(f, "{}", b),
         }
     }
 }
@@ -80,12 +82,13 @@ impl Environment {
                         params: params.clone(),
                         body: body.clone(),
                     }),
+                    Value::Bool(b) => Ok(Value::Bool(*b)),
                 },
                 None => Err("no such variable".to_string()),
             },
             Expr::Literal(literal) => match literal {
                 Literal::Int(n) => Ok(Value::Int(*n)),
-                Literal::Bool(_) => todo!(),
+                Literal::Bool(b) => Ok(Value::Bool(*b)),
             },
             Expr::Function { params, body } => Ok(Value::Fn {
                 params: params.to_owned(),
@@ -97,6 +100,7 @@ impl Environment {
                 Infix::Sub => eval_sub(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Mul => eval_mul(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Div => eval_div(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Eql => todo!(),
             },
             Expr::Call { func, args } => match func.as_ref() {
                 Expr::Ident(func_name) => {
@@ -133,12 +137,7 @@ impl Environment {
             return Err("Variable not exists".to_string());
         }
         match self.variables.get_mut(name) {
-            Some(origin) => match origin {
-                Value::Int(_) => *origin = value,
-                Value::Fn { .. } => {
-                    *origin = value;
-                }
-            },
+            Some(origin) => *origin = value,
             None => return Err("Variable not exists".to_string()),
         }
         Ok(())

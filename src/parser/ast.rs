@@ -45,6 +45,11 @@ pub enum Expr {
     BinExpr(Box<Expr>, Infix, Box<Expr>),
     Function { params: Vec<String>, body: Program },
     Call { func: Box<Expr>, args: Vec<Expr> },
+    // If {
+    //     cond: Box<Expr>,
+    //     then: Box<Expr>,
+    //     els: Option<Box<Expr>>,
+    // },
 }
 
 impl Debug for Expr {
@@ -80,12 +85,14 @@ impl Debug for Expr {
 #[derive(PartialEq, Clone)]
 pub enum Prefix {
     Minus,
+    Neq,
 }
 
 impl Debug for Prefix {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
             Prefix::Minus => write!(f, "-"),
+            Prefix::Neq => write!(f, "!"),
         }
     }
 }
@@ -96,6 +103,7 @@ pub enum Infix {
     Sub,
     Mul,
     Div,
+    Eql,
 }
 
 impl Debug for Infix {
@@ -105,6 +113,7 @@ impl Debug for Infix {
             Infix::Sub => write!(f, "-"),
             Infix::Mul => write!(f, "*"),
             Infix::Div => write!(f, "/"),
+            Infix::Eql => write!(f, "=="),
         }
     }
 }
