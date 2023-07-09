@@ -17,7 +17,7 @@ use nom::{
 
 use super::ast::*;
 
-pub fn identifier(i: &str) -> IResult<&str, Expr> {
+fn identifier(i: &str) -> IResult<&str, Expr> {
     // variable
     map(delimited(multispace, alpha1, multispace), |s: &str| {
         Expr::Ident(s.to_string())
@@ -135,7 +135,7 @@ fn term(i: &str) -> IResult<&str, Expr> {
     Ok((i, fold_exprs(initial, remainder)))
 }
 
-pub fn expr(i: &str) -> IResult<&str, Expr> {
+fn expr(i: &str) -> IResult<&str, Expr> {
     let (i, initial) = term(i)?;
     let (i, remainder) = many0(alt((
         |i| {
@@ -179,7 +179,7 @@ pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
 }
 
 // let a = 123 : let statement
-pub fn let_stmt(i: &str) -> IResult<&str, Statement> {
+fn let_stmt(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((
             tag("let"),
@@ -199,7 +199,7 @@ pub fn let_stmt(i: &str) -> IResult<&str, Statement> {
 }
 
 // a = 123
-pub fn set_stmt(i: &str) -> IResult<&str, Statement> {
+fn set_stmt(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((
             identifier,
@@ -217,7 +217,7 @@ pub fn set_stmt(i: &str) -> IResult<&str, Statement> {
     .parse(i)
 }
 
-pub fn return_stmt(i: &str) -> IResult<&str, Statement> {
+fn return_stmt(i: &str) -> IResult<&str, Statement> {
     map(
         tuple((tag("return"), delimited(multispace, expr, multispace))),
         |(_, ret)| Statement::Return(ret),

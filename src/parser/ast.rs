@@ -117,3 +117,14 @@ impl Debug for Infix {
         }
     }
 }
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum Prec {
+    Lowest,
+    Equals,
+    LessGreater,
+    Sum,
+    Product,
+    Call,
+    Index,
+}
