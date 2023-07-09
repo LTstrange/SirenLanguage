@@ -69,3 +69,9 @@ b = -39
     - [x] bind function
     - [x] fn call
     - [x] return statement
+  - [ ] boolean operator
+    - [x] not operator
+    - [ ] eql operator
+  - [ ] if expression
+    - [ ] if parser
+    - [ ] block statement
