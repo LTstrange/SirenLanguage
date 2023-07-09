@@ -372,7 +372,7 @@ mod test {
         );
         assert_eq!(
             statement("let c = add(a, b)").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "add.call(a, b)".to_string()))
+            Ok(("", "let c = add.call(a, b)".to_string()))
         )
     }
 }
