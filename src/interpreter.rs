@@ -57,21 +57,21 @@ impl Environment {
     // evaluate oneline code
     pub fn eval(&mut self, ast: Statement) -> Result<Option<Value>, String> {
         match ast {
-            Statement::Let { name, value } => {
+            Statement::Let { name, ref value } => {
                 self.bind(&name, self.eval_expr(value)?)?;
                 Ok(None)
             }
-            Statement::Expr(expr) => Ok(Some(self.eval_expr(expr)?)),
+            Statement::Expr(expr) => Ok(Some(self.eval_expr(&expr)?)),
             Statement::Set { name, value } => {
-                self.set(&name, self.eval_expr(value)?)?;
+                self.set(&name, self.eval_expr(&value)?)?;
                 Ok(None)
             }
-            Statement::Return(_) => Err("Err: Return statement not supported".to_string()),
+            Statement::Return(ret) => Ok(Some(self.eval_expr(&ret)?)),
         }
     }
 
     // evaluate expression
-    fn eval_expr(&self, expr: Expr) -> Result<Value, String> {
+    fn eval_expr(&self, expr: &Expr) -> Result<Value, String> {
         match expr {
             Expr::Ident(ident) => match self.get(&ident) {
                 Some(n) => match n {
@@ -84,20 +84,39 @@ impl Environment {
                 None => Err("no such variable".to_string()),
             },
             Expr::Literal(literal) => match literal {
-                Literal::Int(n) => Ok(Value::Int(n)),
+                Literal::Int(n) => Ok(Value::Int(*n)),
                 Literal::Bool(_) => todo!(),
             },
-            Expr::Function { params, body } => Ok(Value::Fn { params, body }),
-            Expr::UnExpr(_, n) => Ok(Value::Int(-get_value!(self.eval_expr(*n)?, Int)?)),
-            Expr::BinExpr(l, op, r) => match op {
+            Expr::Function { params, body } => Ok(Value::Fn {
+                params: params.to_owned(),
+                body: body.to_owned(),
+            }),
+            Expr::UnExpr(_, ref n) => Ok(Value::Int(-get_value!(self.eval_expr(n)?, Int)?)),
+            Expr::BinExpr(ref l, op, ref r) => match op {
                 // todo : type check should be considered here!
                 // I need to complete type system for this!
-                Infix::Add => eval_add(self.eval_expr(*l)?, self.eval_expr(*r)?),
-                Infix::Sub => eval_sub(self.eval_expr(*l)?, self.eval_expr(*r)?),
-                Infix::Mul => eval_mul(self.eval_expr(*l)?, self.eval_expr(*r)?),
-                Infix::Div => eval_div(self.eval_expr(*l)?, self.eval_expr(*r)?),
+                Infix::Add => eval_add(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Sub => eval_sub(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Mul => eval_mul(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Div => eval_div(self.eval_expr(l)?, self.eval_expr(r)?),
             },
-            Expr::Call { func, args } => todo!(),
+            Expr::Call { func, args } => match func.as_ref() {
+                Expr::Ident(func) => {
+                    let func = self.get(func).ok_or("no such function")?;
+                    let (params, body) = match func {
+                        Value::Fn { params, body } => Ok((params, body)),
+                        _ => Err("this is not a function".to_string()),
+                    }?;
+                    let mut result = vec![];
+                    for (i, param) in params.iter().enumerate() {
+                        let arg = self.eval_expr(&args[i])?;
+                        result.push((param.clone(), arg));
+                    }
+                    eval_func(result, body)
+                }
+                Expr::Function { params, body } => todo!(),
+                _ => Err("Calling non-function".to_string()),
+            },
         }
     }
 
@@ -145,4 +164,18 @@ fn eval_mul(left: Value, right: Value) -> Result<Value, String> {
 
 fn eval_div(left: Value, right: Value) -> Result<Value, String> {
     Ok(Value::Int(get_value!(left, Int)? / get_value!(right, Int)?))
+}
+
+fn eval_func(params: Vec<(String, Value)>, body: &Vec<Statement>) -> Result<Value, String> {
+    let mut env = Environment::new();
+    for (name, value) in params {
+        env.bind(&name, value)?;
+    }
+    let mut result: Option<Value> = None;
+    for stmt in body {
+        if let Some(r) = env.eval(stmt.clone())? {
+            result = Some(r);
+        }
+    }
+    result.ok_or_else(|| "Function return value is None".to_string())
 }
