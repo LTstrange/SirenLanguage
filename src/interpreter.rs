@@ -94,7 +94,14 @@ impl Environment {
                 params: params.to_owned(),
                 body: body.to_owned(),
             }),
-            Expr::UnExpr(_, ref n) => Ok(Value::Int(-get_value!(self.eval_expr(n)?, Int)?)),
+            // Expr::UnExpr(_, ref n) => Ok(Value::Int(-get_value!(self.eval_expr(n)?, Int)?)),
+            Expr::UnExpr(op, ref n) => {
+                let value = self.eval_expr(n)?;
+                match op {
+                    Prefix::Minus => Ok(Value::Int(-get_value!(value, Int)?)),
+                    Prefix::Not => Ok(Value::Bool(!get_value!(value, Bool)?)),
+                }
+            }
             Expr::BinExpr(ref l, op, ref r) => match op {
                 Infix::Add => eval_add(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Sub => eval_sub(self.eval_expr(l)?, self.eval_expr(r)?),
