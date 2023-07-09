@@ -18,7 +18,7 @@ impl SirenParser {
         // use statement parser to parse one line code
         match statement(input) {
             Ok((i, statement)) if i.is_empty() => Ok(statement), // success only if the input has reached the end
-            Ok((_, _)) => Err(String::from("Invalid input")),
+            Ok((i, _)) => Err(format!("Invalid input; rest {}", i)),
             Err(err) => Err(format!("{:?}", err)), // return the parse error
         }
     }
