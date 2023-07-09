@@ -93,10 +93,17 @@ fn factor(i: &str) -> IResult<&str, Expr> {
         map(
             delimited(
                 multispace,
-                preceded(tag("-"), alt((number, parens, identifier))),
+                tuple((
+                    alt((tag("-"), tag("!"))),
+                    alt((boolean, number, parens, identifier)),
+                )),
                 multispace,
             ),
-            |a| Expr::UnExpr(Prefix::Minus, Box::new(a)),
+            |(op, right)| match op {
+                "-" => Expr::UnExpr(Prefix::Minus, Box::new(right)),
+                "!" => Expr::UnExpr(Prefix::Not, Box::new(right)),
+                _ => unreachable!(),
+            },
         ),
         parens,
     ))
@@ -409,6 +416,10 @@ mod test {
         assert_eq!(
             boolean("false").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "false".to_string()))
+        );
+        assert_eq!(
+            factor("!false").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "(!false)".to_string()))
         );
     }
 }

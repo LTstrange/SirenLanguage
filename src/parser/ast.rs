@@ -85,14 +85,14 @@ impl Debug for Expr {
 #[derive(PartialEq, Clone)]
 pub enum Prefix {
     Minus,
-    Neq,
+    Not,
 }
 
 impl Debug for Prefix {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match *self {
             Prefix::Minus => write!(f, "-"),
-            Prefix::Neq => write!(f, "!"),
+            Prefix::Not => write!(f, "!"),
         }
     }
 }
