@@ -5,11 +5,7 @@ I'm trying to make a simple programming language called Siren Language.
 This language will become a graphic and text programming language.
 
 ## example
-```
-let a = 123 - 12 / 4;
-let b = (-a + 42) / 2;
-```
-REPL output: `cargo r`
+REPL: `cargo r`
 ```
 > let a = 123 - 12 / 4
 > a
@@ -19,15 +15,31 @@ REPL output: `cargo r`
 -39
 >
 ```
+test1.siren
+```
+let a = 123 - 12 / 4;
+let b = (-a + 42) / 2;
+
+let add = fn (a, b) {
+    return a + b;
+};
+
+let c = add(a, b);
+```
+
 File output: `cargo r test1.siren`
 ```
 Content:
 let a = 123 - 12 / 4;
 let b = (-a + 42) / 2;
+[...]
+let c = add(a, b);
 Done.
 Env:
-a = 120
+c = 81
 b = -39
+a = 120
+add = fn (a, b) { return (a + b); }
 ```
 
 ## Todolist
