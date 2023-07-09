@@ -142,6 +142,7 @@ pub fn statement(i: &str) -> IResult<&str, Statement> {
     alt((
         set_stmt,                   // set: "a = 123"
         let_stmt,                   // bind: "let a = 123"
+        return_stmt,                // return: "return 123"
         map(expr, Statement::Expr), // expr: "(123 + 234) / 5"
     ))(i)
 }
@@ -199,6 +200,13 @@ pub fn set_stmt(i: &str) -> IResult<&str, Statement> {
         },
     )
     .parse(i)
+}
+
+pub fn return_stmt(i: &str) -> IResult<&str, Statement> {
+    map(
+        tuple((tag("return"), delimited(multispace, expr, multispace))),
+        |(_, ret)| Statement::Return(ret),
+    )(i)
 }
 
 #[cfg(test)]
@@ -373,6 +381,14 @@ mod test {
         assert_eq!(
             statement("let c = add(a, b)").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "let c = add.call(a, b)".to_string()))
+        )
+    }
+
+    #[test]
+    fn return_test() {
+        assert_eq!(
+            return_stmt("return 123").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "return 123".to_string()))
         )
     }
 }

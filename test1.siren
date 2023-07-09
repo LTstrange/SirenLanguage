@@ -2,7 +2,7 @@ let a = 123 - 12 / 4;
 let b = (-a + 42) / 2;
 
 let add = fn (a, b) {
-    a + b
+    return a + b;
 };
 
 let c = add(a, b);
