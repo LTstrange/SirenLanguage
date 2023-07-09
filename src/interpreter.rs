@@ -97,6 +97,7 @@ impl Environment {
                 Infix::Mul => eval_mul(self.eval_expr(*l)?, self.eval_expr(*r)?),
                 Infix::Div => eval_div(self.eval_expr(*l)?, self.eval_expr(*r)?),
             },
+            Expr::Call { func, args } => todo!(),
         }
     }
 

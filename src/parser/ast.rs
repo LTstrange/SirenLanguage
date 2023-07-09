@@ -44,6 +44,7 @@ pub enum Expr {
     UnExpr(Prefix, Box<Expr>),
     BinExpr(Box<Expr>, Infix, Box<Expr>),
     Function { params: Vec<String>, body: Program },
+    Call { func: Box<Expr>, args: Vec<Expr> },
 }
 
 impl Debug for Expr {
@@ -63,6 +64,15 @@ impl Debug for Expr {
                         .collect::<String>()
                 )
             }
+            Expr::Call { func, args } => write!(
+                f,
+                "{:?}.call({})",
+                func,
+                args.iter()
+                    .map(|expr| format!("{:?}", expr))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
         }
     }
 }

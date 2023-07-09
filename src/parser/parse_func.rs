@@ -61,10 +61,25 @@ fn parens(i: &str) -> IResult<&str, Expr> {
     delimited(multispace, delimited(tag("("), expr, tag(")")), multispace).parse(i)
 }
 
+fn call(i: &str) -> IResult<&str, Expr> {
+    let (i, func) = identifier(i)?;
+    let (i, _) = tag("(")(i)?;
+    let (i, args) = separated_list0(tag(","), expr)(i)?;
+    let (i, _) = tag(")")(i)?;
+    Ok((
+        i,
+        Expr::Call {
+            func: Box::new(func),
+            args,
+        },
+    ))
+}
+
 // conclude identifier, number, unary expression and parens
 fn factor(i: &str) -> IResult<&str, Expr> {
     alt((
         function,
+        call,
         identifier,
         number,
         map(
@@ -334,7 +349,7 @@ mod test {
     }
 
     #[test]
-    fn bind_test() {
+    fn let_stmt_test() {
         assert_eq!(
             let_stmt("let a = 123").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "let a = 123".to_string()))
@@ -345,6 +360,19 @@ mod test {
         assert_eq!(
             set_stmt("a = 123").map(|(i, b)| (i, format!("{:?}", b))),
             Ok(("", "set a = 123".to_string()))
+        )
+    }
+
+    #[test]
+    fn call_test() {
+        println!("break");
+        assert_eq!(
+            call("add(a, b)").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "add.call(a, b)".to_string()))
+        );
+        assert_eq!(
+            statement("let c = add(a, b)").map(|(i, b)| (i, format!("{:?}", b))),
+            Ok(("", "add.call(a, b)".to_string()))
         )
     }
 }

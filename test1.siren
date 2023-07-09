@@ -4,3 +4,5 @@ let b = (-a + 42) / 2;
 let add = fn (a, b) {
     a + b
 };
+
+let c = add(a, b);
