@@ -109,23 +109,25 @@ impl Environment {
                 Infix::Div => eval_div(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Eql => todo!(),
             },
-            Expr::Call { func, args } => match func.as_ref() {
-                Expr::Ident(func_name) => {
-                    let func = self.get(func_name).ok_or("no such function")?;
-                    let (params, body) = match func {
-                        Value::Fn { params, body } => Ok((params, body)),
-                        _ => Err("this is not a function".to_string()),
-                    }?;
+            Expr::Call { func, args } => {
+                let args = args
+                    .iter()
+                    .map(|arg| self.eval_expr(arg))
+                    .collect::<Result<Vec<Value>, String>>()?;
+                match func.as_ref() {
+                    Expr::Ident(func_name) => {
+                        let func = self.get(func_name).ok_or("no such function")?;
+                        let (params, body) = match func {
+                            Value::Fn { params, body } => Ok((params, body)),
+                            _ => Err("this is not a function".to_string()),
+                        }?;
 
-                    let args = args
-                        .iter()
-                        .map(|arg| self.eval_expr(arg))
-                        .collect::<Result<Vec<Value>, String>>()?;
-                    eval_func(params, args, body, func_name)
+                        eval_func(params, args, body, Some(func_name))
+                    }
+                    Expr::Function { params, body } => eval_func(params, args, body, None),
+                    _ => Err("Calling non-function".to_string()),
                 }
-                Expr::Function { params, body } => todo!(),
-                _ => Err("Calling non-function".to_string()),
-            },
+            }
         }
     }
 
@@ -174,16 +176,18 @@ fn eval_func(
     params: &Vec<String>,
     args: Vec<Value>,
     body: &Vec<Statement>,
-    self_func: &str,
+    self_func: Option<&str>,
 ) -> Result<Value, String> {
     let mut env = Environment::new();
-    env.bind(
-        self_func,
-        Value::Fn {
-            params: params.to_vec(),
-            body: body.to_vec(),
-        },
-    )?;
+    if let Some(name) = self_func {
+        env.bind(
+            name,
+            Value::Fn {
+                params: params.to_vec(),
+                body: body.to_vec(),
+            },
+        )?;
+    }
     for (param, arg) in zip(params, args) {
         env.bind(param, arg)?;
     }
