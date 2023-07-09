@@ -69,4 +69,3 @@ b = -39
     - [x] bind function
     - [x] fn call
     - [x] return statement
-    - [ ] anonymous function call (need a better way to parse expression)
