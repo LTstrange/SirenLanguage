@@ -15,7 +15,11 @@ macro_rules! get_value {
     ($value: expr, $type: ident) => {
         match $value {
             Value::$type(value) => Ok(value),
-            _ => Err("Not matched type".to_string()),
+            _ => Err(format!(
+                "Not matched type: expect {}, found {}.",
+                stringify!($type),
+                $value
+            )),
         }
     };
 }
@@ -107,7 +111,14 @@ impl Environment {
                 Infix::Sub => eval_sub(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Mul => eval_mul(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Div => eval_div(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Eql => todo!(),
+                Infix::Eql => eval_eql(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Neq => eval_neq(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Lt => todo!(),
+                Infix::Gt => todo!(),
+                Infix::Lte => todo!(),
+                Infix::Gte => todo!(),
+                Infix::Call => unreachable!(),
+                Infix::Index => unreachable!(),
             },
             Expr::Call { func, args } => {
                 let args = args
@@ -128,6 +139,7 @@ impl Environment {
                     _ => Err("Calling non-function".to_string()),
                 }
             }
+            Expr::Index { arr, index } => todo!(),
         }
     }
 
@@ -170,6 +182,21 @@ fn eval_mul(left: Value, right: Value) -> Result<Value, String> {
 
 fn eval_div(left: Value, right: Value) -> Result<Value, String> {
     Ok(Value::Int(get_value!(left, Int)? / get_value!(right, Int)?))
+}
+
+fn eval_eql(left: Value, right: Value) -> Result<Value, String> {
+    match left {
+        Value::Int(n) => Ok(Value::Bool(get_value!(right, Int)? == n)),
+        Value::Bool(b) => Ok(Value::Bool(get_value!(right, Bool)? == b)),
+        Value::Fn { .. } => Err("Cannot compare function".to_string()),
+    }
+}
+fn eval_neq(left: Value, right: Value) -> Result<Value, String> {
+    match left {
+        Value::Int(n) => Ok(Value::Bool(get_value!(right, Int)? != n)),
+        Value::Bool(b) => Ok(Value::Bool(get_value!(right, Bool)? != b)),
+        Value::Fn { .. } => Err("Cannot compare function".to_string()),
+    }
 }
 
 fn eval_func(

@@ -45,6 +45,7 @@ pub enum Expr {
     BinExpr(Box<Expr>, Infix, Box<Expr>),
     Function { params: Vec<String>, body: Program },
     Call { func: Box<Expr>, args: Vec<Expr> },
+    Index { arr: Box<Expr>, index: Box<Expr> },
     // If {
     //     cond: Box<Expr>,
     //     then: Box<Expr>,
@@ -78,6 +79,7 @@ impl Debug for Expr {
                     .collect::<Vec<String>>()
                     .join(", ")
             ),
+            Expr::Index { arr, index } => todo!(),
         }
     }
 }
@@ -104,6 +106,13 @@ pub enum Infix {
     Mul,
     Div,
     Eql,
+    Neq,
+    Lt,
+    Gt,
+    Lte,
+    Gte,
+    Call,
+    Index,
 }
 
 impl Debug for Infix {
@@ -114,6 +123,13 @@ impl Debug for Infix {
             Infix::Mul => write!(f, "*"),
             Infix::Div => write!(f, "/"),
             Infix::Eql => write!(f, "=="),
+            Infix::Neq => write!(f, "!="),
+            Infix::Lt => write!(f, "<"),
+            Infix::Gt => write!(f, ">"),
+            Infix::Lte => write!(f, "<="),
+            Infix::Gte => write!(f, ">="),
+            Infix::Call => todo!(),
+            Infix::Index => todo!(),
         }
     }
 }

@@ -53,11 +53,10 @@ b = -39
 ## Todolist
 
 1. minimum REPL
-  - [x] minimum amount of datatype: int, fn
-    - [ ] bool
+  - [x] minimum amount of datatype: int, fn, bool
   - [x] expressions:
     - Infix: `+ - * /`
-    - Prefix: `-`
+    - Prefix: `- !`
   - [x] variables(identifier): `abc foo bar`
     - let statement
     - set statement
@@ -69,9 +68,10 @@ b = -39
     - [x] bind function
     - [x] fn call
     - [x] return statement
-  - [ ] boolean operator
+  - [x] boolean operator
     - [x] not operator
-    - [ ] eql operator
+    - [x] eql operator
+    - [x] not eql operator
   - [ ] if expression
     - [ ] if parser
     - [ ] block statement

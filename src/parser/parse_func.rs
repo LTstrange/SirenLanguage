@@ -1,425 +1,283 @@
-use std::str::FromStr;
+// #![allow(unused)]
 
-use nom::character::complete::alpha1;
-use nom::combinator::{opt, recognize};
-use nom::multi::separated_list0;
-use nom::sequence::tuple;
-use nom::Parser;
+use nom::bytes::complete::take;
+use nom::combinator::opt;
+use nom::error::{Error, ErrorKind};
+use nom::sequence::{terminated, tuple};
 use nom::{
     branch::alt,
-    bytes::complete::tag,
-    character::complete::{digit1 as digit, multispace0 as multispace},
-    combinator::{map, map_res},
+    combinator::{map, verify},
     multi::many0,
-    sequence::{delimited, preceded},
-    IResult,
+    sequence::{delimited, pair, preceded},
+    Err, IResult,
 };
 
 use super::ast::*;
+use crate::lexer::{Token, Tokens};
 
-fn identifier(i: &str) -> IResult<&str, Expr> {
-    // variable
-    map(delimited(multispace, alpha1, multispace), |s: &str| {
-        Expr::Ident(s.to_string())
-    })
-    .parse(i)
-}
-
-fn number(i: &str) -> IResult<&str, Expr> {
-    map(
-        map_res(delimited(multispace, digit, multispace), FromStr::from_str),
-        |n: i64| Expr::Literal(Literal::Int(n)),
+macro_rules! tag_token (
+    ($func_name:ident, $tag: expr) => (
+        fn $func_name(tokens: Tokens) -> IResult<Tokens, Tokens> {
+            verify(take(1usize), |t: &Tokens| t.tok[0] == $tag)(tokens)
+        }
     )
-    .parse(i)
+);
+
+tag_token!(let_tag, Token::Let);
+tag_token!(assign_tag, Token::Assign);
+tag_token!(semicolon_tag, Token::Semicolon);
+tag_token!(return_tag, Token::Return);
+tag_token!(lparen_tag, Token::LParen);
+tag_token!(rparen_tag, Token::RParen);
+tag_token!(lbracket_tag, Token::LBracket);
+tag_token!(rbracket_tag, Token::RBracket);
+tag_token!(lbrace_tag, Token::LBrace);
+tag_token!(rbrace_tag, Token::RBrace);
+tag_token!(comma_tag, Token::Comma);
+// tag_token!(colon_tag, Token::Colon);
+tag_token!(sub_tag, Token::Sub);
+tag_token!(not_tag, Token::Not);
+tag_token!(if_tag, Token::If);
+tag_token!(else_tag, Token::Else);
+tag_token!(fn_tag, Token::Fn);
+
+fn infix_op(tok: &Token) -> (Prec, Option<Infix>) {
+    match tok {
+        Token::Add => (Prec::Sum, Some(Infix::Add)),
+        Token::Sub => (Prec::Sum, Some(Infix::Sub)),
+        Token::Mul => (Prec::Product, Some(Infix::Mul)),
+        Token::Div => (Prec::Product, Some(Infix::Div)),
+        Token::Equal => (Prec::Equals, Some(Infix::Eql)),
+        Token::NotEqual => (Prec::Equals, Some(Infix::Neq)),
+        Token::Less => (Prec::LessGreater, Some(Infix::Lt)),
+        Token::LessEqual => (Prec::LessGreater, Some(Infix::Lte)),
+        Token::Greater => (Prec::LessGreater, Some(Infix::Gt)),
+        Token::GreaterEqual => (Prec::LessGreater, Some(Infix::Gte)),
+        Token::LParen => (Prec::Call, None),
+        Token::LBracket => (Prec::Index, None),
+        _ => (Prec::Lowest, None),
+    }
 }
 
-fn boolean(i: &str) -> IResult<&str, Expr> {
-    alt((
-        map(tag("true"), |_| Expr::Literal(Literal::Bool(true))),
-        map(tag("false"), |_| Expr::Literal(Literal::Bool(false))),
-    ))(i)
+// int bool
+fn literal(input: Tokens) -> IResult<Tokens, Expr> {
+    let (i1, t1) = take(1usize)(input)?;
+    if t1.tok.is_empty() {
+        Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+    } else {
+        match t1.tok[0] {
+            Token::Int(n) => Ok((i1, Expr::Literal(Literal::Int(n)))),
+            Token::Bool(b) => Ok((i1, Expr::Literal(Literal::Bool(b)))),
+            _ => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
+        }
+    }
 }
 
-fn function(i: &str) -> IResult<&str, Expr> {
-    // arguments
-    let (i, params) = preceded(
-        tuple((multispace, tag("fn"), multispace)),
-        // tuple of arguments
-        delimited(
-            tag("("),
-            separated_list0(tag(","), recognize(identifier)),
-            tag(")"),
-        ),
-    )(i)?;
-    // statements
-    let (i, body) = delimited(
-        tuple((multispace, tag("{"))),
-        statements,
-        tuple((multispace, tag("}"), multispace)),
-    )(i)?;
-    let params = params
-        .into_iter()
-        .map(|arg| arg.trim().to_string())
-        .collect();
-    Ok((i, Expr::Function { params, body }))
+fn identity(input: Tokens) -> IResult<Tokens, Expr> {
+    let (i1, t1) = take(1usize)(input)?;
+    if t1.tok.is_empty() {
+        Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+    } else {
+        match &t1.tok[0] {
+            Token::Ident(s) => Ok((i1, Expr::Ident(s.to_string()))),
+            _ => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
+        }
+    }
 }
 
-fn parens(i: &str) -> IResult<&str, Expr> {
-    delimited(multispace, delimited(tag("("), expr, tag(")")), multispace).parse(i)
+fn prefix_expr(input: Tokens) -> IResult<Tokens, Expr> {
+    let (input, prefix) = alt((sub_tag, not_tag))(input)?;
+    if prefix.tok.is_empty() {
+        Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+    } else {
+        let (input, oprand) = atom_expr(input)?;
+        match &prefix.tok[0] {
+            Token::Sub => Ok((input, Expr::UnExpr(Prefix::Minus, Box::new(oprand)))),
+            Token::Not => Ok((input, Expr::UnExpr(Prefix::Not, Box::new(oprand)))),
+            _ => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
+        }
+    }
 }
 
-fn call(i: &str) -> IResult<&str, Expr> {
-    let (i, func) = identifier(i)?;
-    let (i, _) = tag("(")(i)?;
-    let (i, args) = separated_list0(tag(","), expr)(i)?;
-    let (i, _) = tag(")")(i)?;
-    Ok((
-        i,
-        Expr::Call {
-            func: Box::new(func),
-            args,
-        },
-    ))
+fn parent_expr(input: Tokens) -> IResult<Tokens, Expr> {
+    delimited(lparen_tag, expr, rparen_tag)(input)
 }
 
-// conclude identifier, number, unary expression and parens
-fn factor(i: &str) -> IResult<&str, Expr> {
-    alt((
-        function,
-        call,
-        boolean,
-        number,
-        identifier,
-        map(
-            delimited(
-                multispace,
-                tuple((
-                    alt((tag("-"), tag("!"))),
-                    alt((boolean, number, parens, identifier)),
-                )),
-                multispace,
-            ),
-            |(op, right)| match op {
-                "-" => Expr::UnExpr(Prefix::Minus, Box::new(right)),
-                "!" => Expr::UnExpr(Prefix::Not, Box::new(right)),
-                _ => unreachable!(),
-            },
-        ),
-        parens,
-    ))
-    .parse(i)
+fn parse_params(input: Tokens) -> IResult<Tokens, Vec<Expr>> {
+    map(
+        pair(identity, many0(preceded(comma_tag, identity))),
+        |(p, ps)| [&vec![p][..], &ps[..]].concat(),
+    )(input)
 }
 
-// fold list of expressions
-fn fold_exprs(initial: Expr, remainder: Vec<(Infix, Expr)>) -> Expr {
-    remainder.into_iter().fold(initial, |acc, pair| {
-        let (oper, expr) = pair;
-        Expr::BinExpr(Box::new(acc), oper, Box::new(expr))
-    })
-}
-
-fn term(i: &str) -> IResult<&str, Expr> {
-    let (i, initial) = factor(i)?;
-    let (i, remainder) = many0(alt((
-        |i| {
-            let (i, mul) = preceded(tag("*"), factor).parse(i)?;
-            Ok((i, (Infix::Mul, mul)))
-        },
-        |i| {
-            let (i, div) = preceded(tag("/"), factor).parse(i)?;
-            Ok((i, (Infix::Div, div)))
-        },
-    )))
-    .parse(i)?;
-
-    Ok((i, fold_exprs(initial, remainder)))
-}
-
-fn expr(i: &str) -> IResult<&str, Expr> {
-    let (i, initial) = term(i)?;
-    let (i, remainder) = many0(alt((
-        |i| {
-            let (i, add) = preceded(tag("+"), term).parse(i)?;
-            Ok((i, (Infix::Add, add)))
-        },
-        |i| {
-            let (i, sub) = preceded(tag("-"), term).parse(i)?;
-            Ok((i, (Infix::Sub, sub)))
-        },
-    )))
-    .parse(i)?;
-
-    Ok((i, fold_exprs(initial, remainder)))
-}
-
-// oneline code parser
-pub fn statement(i: &str) -> IResult<&str, Statement> {
-    alt((
-        set_stmt,                   // set: "a = 123"
-        let_stmt,                   // bind: "let a = 123"
-        return_stmt,                // return: "return 123"
-        map(expr, Statement::Expr), // expr: "(123 + 234) / 5"
-    ))(i)
-}
-
-// multi line code parser: list of statement
-pub fn statements(i: &str) -> IResult<&str, Vec<Statement>> {
+fn fn_expr(input: Tokens) -> IResult<Tokens, Expr> {
     map(
         tuple((
-            many0(delimited(multispace, statement, tag(";"))),
-            opt(preceded(multispace, statement)),
+            fn_tag,
+            lparen_tag,
+            alt((parse_params, empty)),
+            rparen_tag,
+            block_stmt,
         )),
+        |(_, _, p, _, b)| {
+            let params = p
+                .iter()
+                .map(|e| match e {
+                    Expr::Ident(name) => name.to_string(),
+                    _ => unreachable!(),
+                })
+                .collect();
+            Expr::Function { params, body: b }
+        },
+    )(input)
+}
+
+fn parse_comma_exprs(input: Tokens) -> IResult<Tokens, Expr> {
+    preceded(comma_tag, expr)(input)
+}
+fn parse_exprs(input: Tokens) -> IResult<Tokens, Vec<Expr>> {
+    map(pair(expr, many0(parse_comma_exprs)), |(first, second)| {
+        [&vec![first][..], &second[..]].concat()
+    })(input)
+}
+fn empty(input: Tokens) -> IResult<Tokens, Vec<Expr>> {
+    Ok((input, vec![]))
+}
+fn call_expr(input: Tokens, func: Expr) -> IResult<Tokens, Expr> {
+    map(
+        delimited(lparen_tag, alt((parse_exprs, empty)), rparen_tag),
+        |e| Expr::Call {
+            func: Box::new(func.clone()),
+            args: e,
+        },
+    )(input)
+}
+
+fn index_expr(input: Tokens, arr: Expr) -> IResult<Tokens, Expr> {
+    map(delimited(lbracket_tag, expr, rbracket_tag), |idx| {
+        Expr::Index {
+            arr: Box::new(arr.clone()),
+            index: Box::new(idx),
+        }
+    })(input)
+}
+
+fn infix_expr(input: Tokens, left: Expr) -> IResult<Tokens, Expr> {
+    let (input, tok) = take(1usize)(input)?;
+    let (prec, op) = infix_op(&tok.tok[0]);
+    let op = op.unwrap();
+    let (input, right) = pratt_expr(input, prec)?;
+    Ok((input, Expr::BinExpr(Box::new(left), op, Box::new(right))))
+}
+
+fn atom_expr(input: Tokens) -> IResult<Tokens, Expr> {
+    alt((literal, identity, prefix_expr, parent_expr, fn_expr))(input)
+}
+
+fn pratt_expr(input: Tokens, prec: Prec) -> IResult<Tokens, Expr> {
+    let (mut input, mut left) = atom_expr(input)?;
+    loop {
+        if input.tok.is_empty() {
+            return Ok((input, left));
+        }
+        let p = take(1usize)(input).map(|(_, t)| infix_op(&t.tok[0]))?;
+        if p.0 <= prec {
+            break;
+        }
+        match p {
+            (Prec::Call, _) => {
+                (input, left) = call_expr(input, left)?;
+            }
+            (Prec::Index, _) => {
+                (input, left) = index_expr(input, left)?;
+            }
+            (_, _) => {
+                (input, left) = infix_expr(input, left)?;
+            }
+        }
+    }
+    Ok((input, left))
+}
+
+fn expr(input: Tokens) -> IResult<Tokens, Expr> {
+    pratt_expr(input, Prec::Lowest)
+}
+
+fn expr_stmt(input: Tokens) -> IResult<Tokens, Statement> {
+    map(expr, Statement::Expr)(input)
+}
+
+fn return_stmt(input: Tokens) -> IResult<Tokens, Statement> {
+    map(preceded(return_tag, expr), Statement::Return)(input)
+}
+
+fn let_stmt(input: Tokens) -> IResult<Tokens, Statement> {
+    map(
+        tuple((let_tag, identity, assign_tag, expr)),
+        |(_, ident, _, value)| match ident {
+            Expr::Ident(name) => Statement::Let { name, value },
+            _ => unreachable!(),
+        },
+    )(input)
+}
+
+pub fn statement(input: Tokens) -> IResult<Tokens, Statement> {
+    alt((expr_stmt, return_stmt, let_stmt))(input)
+}
+
+fn block_stmt(input: Tokens) -> IResult<Tokens, Vec<Statement>> {
+    map(
+        delimited(
+            lbrace_tag,
+            tuple((many0(terminated(statement, semicolon_tag)), opt(statement))),
+            rbrace_tag,
+        ),
         |(mut stmts, ret)| {
             if let Some(Statement::Expr(expr)) = ret {
                 stmts.push(Statement::Return(expr));
             }
             stmts
         },
-    )(i)
+    )(input)
 }
 
-// let a = 123 : let statement
-fn let_stmt(i: &str) -> IResult<&str, Statement> {
-    map(
-        tuple((
-            tag("let"),
-            identifier,
-            delimited(multispace, tag("="), multispace),
-            expr,
-        )),
-        |(_, id, _, expr)| match id {
-            Expr::Ident(s) => Statement::Let {
-                name: s,
-                value: expr,
-            },
-            _ => unreachable!(),
-        },
-    )
-    .parse(i)
-}
-
-// a = 123
-fn set_stmt(i: &str) -> IResult<&str, Statement> {
-    map(
-        tuple((
-            identifier,
-            delimited(multispace, tag("="), multispace),
-            expr,
-        )),
-        |(id, _, expr)| match id {
-            Expr::Ident(s) => Statement::Set {
-                name: s,
-                value: expr,
-            },
-            _ => unreachable!(),
-        },
-    )
-    .parse(i)
-}
-
-fn return_stmt(i: &str) -> IResult<&str, Statement> {
-    map(
-        tuple((tag("return"), delimited(multispace, expr, multispace))),
-        |(_, ret)| Statement::Return(ret),
-    )(i)
+pub fn program(input: Tokens) -> IResult<Tokens, Program> {
+    many0(terminated(statement, semicolon_tag))(input)
 }
 
 #[cfg(test)]
 mod test {
+
     use super::*;
+    use crate::lexer::{lexer, Token};
 
     #[test]
-    fn factor_test() {
+    fn test_parse_expr() {
+        let tokens: Vec<Token> = lexer("1 + 2 * abc + 4 * 5 - 6 / 7");
+        let tokens = Tokens::new(&tokens);
         assert_eq!(
-            factor("  3  ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "3".to_string()))
+            expr(tokens).map(|(_, x)| format!("{:?}", x)),
+            Ok("(((1 + (2 * abc)) + (4 * 5)) - (6 / 7))".to_string())
         );
     }
 
     #[test]
-    fn term_test() {
+    fn test_prefix_expr() {
+        let tokens: Vec<Token> = lexer("1 + -2 * abc");
+        let tokens = Tokens::new(&tokens);
         assert_eq!(
-            term(" 3 *  5   ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "(3 * 5)".to_string()))
-        );
-    }
-
-    #[test]
-    fn expr_test() {
-        assert_eq!(
-            expr(" 1 + 2 *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "(1 + (2 * 3))".to_string()))
-        );
-        assert_eq!(
-            expr(" 1 + 2 *  3 / 4 - 5 ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "((1 + ((2 * 3) / 4)) - 5)".to_string()))
-        );
-        assert_eq!(
-            expr(" 72 / 2 / 3 ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("((72 / 2) / 3)")))
-        );
-    }
-
-    #[test]
-    fn parens_test() {
-        assert_eq!(
-            expr(" ( 1 + 2 ) *  3 ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("((1 + 2) * 3)")))
-        );
-    }
-
-    #[test]
-    fn unary_test() {
-        assert_eq!(
-            expr(" - 1 ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("(-1)")))
-        );
-        assert_eq!(
-            expr("2 * -1").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("(2 * (-1))")))
-        );
-        assert_eq!(
-            expr("-(2 * 1)").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("(-(2 * 1))")))
-        );
-        assert_eq!(
-            expr("-1 + 3").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("((-1) + 3)")))
-        );
-    }
-
-    #[test]
-    fn identifier_test() {
-        assert_eq!(
-            expr("x").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("x")))
-        );
-        assert_eq!(
-            expr("2 + x").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("(2 + x)")))
-        );
-        assert_eq!(
-            expr("-x").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", String::from("(-x)")))
-        );
-    }
-
-    #[test]
-    fn function_test() {
-        assert_eq!(
-            function("fn(x, y) { x + y;  x - y}").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "fn(x, y) { expr (x + y); return (x - y); }".to_string()))
-        );
-    }
-
-    #[test]
-    fn statement_test() {
-        assert_eq!(
-            statement("let a = 123").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "let a = 123".to_string()))
-        );
-        assert_eq!(
-            statement("123 + 254  ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "expr (123 + 254)".to_string()))
-        );
-        assert_eq!(
-            statement("let abc =123 + 254  ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "let abc = (123 + 254)".to_string()))
-        );
-        assert_eq!(
-            statement("abc =123 + 254 ").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "set abc = (123 + 254)".to_string()))
-        );
-        assert_eq!(
-            statement("let abc = fn (a, b) {  a + b;}").map(|(i, x)| (i, format!("{:?}", x))),
-            Ok(("", "let abc = fn(a, b) { expr (a + b); }".to_string()))
-        );
-    }
-
-    #[test]
-    fn statements_test() {
-        assert_eq!(
-            statements("  let a = 123 ;").map(|(i, stmts)| {
-                (
-                    i,
-                    stmts
-                        .iter()
-                        .map(|stmt| format!("{:?}", stmt))
-                        .collect::<Vec<String>>(),
-                )
-            }),
-            Ok(("", vec!["let a = 123".to_string(),],)),
-        );
-        assert_eq!(
-            statements("  let a = 123 ;   123 - 12 / 4  ; a= b  ;").map(|(i, stmts)| {
-                (
-                    i,
-                    stmts
-                        .iter()
-                        .map(|stmt| format!("{:?}", stmt))
-                        .collect::<Vec<String>>(),
-                )
-            }),
-            Ok((
-                "",
-                vec![
-                    "let a = 123".to_string(),
-                    "expr (123 - (12 / 4))".to_string(),
-                    "set a = b".to_string()
-                ],
-            )),
-        );
-    }
-
-    #[test]
-    fn let_stmt_test() {
-        assert_eq!(
-            let_stmt("let a = 123").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "let a = 123".to_string()))
-        )
-    }
-    #[test]
-    fn set_test() {
-        assert_eq!(
-            set_stmt("a = 123").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "set a = 123".to_string()))
+            expr(tokens).map(|(_, x)| format!("{:?}", x)),
+            Ok("(1 + ((-2) * abc))".to_string())
         )
     }
 
     #[test]
-    fn call_test() {
-        println!("break");
+    fn test_parent_expr() {
+        let tokens = lexer("(1 + 2) * 3");
+        let tokens = Tokens::new(&tokens);
         assert_eq!(
-            call("add(a, b)").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "add.call(a, b)".to_string()))
-        );
-        assert_eq!(
-            statement("let c = add(a, b)").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "let c = add.call(a, b)".to_string()))
+            expr(tokens).map(|(_, x)| format!("{:?}", x)),
+            Ok("((1 + 2) * 3)".to_string())
         )
-    }
-
-    #[test]
-    fn return_test() {
-        assert_eq!(
-            return_stmt("return 123").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "return 123".to_string()))
-        )
-    }
-
-    #[test]
-    fn boolean_test() {
-        assert_eq!(
-            boolean("true").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "true".to_string()))
-        );
-        assert_eq!(
-            boolean("false").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "false".to_string()))
-        );
-        assert_eq!(
-            factor("!false").map(|(i, b)| (i, format!("{:?}", b))),
-            Ok(("", "(!false)".to_string()))
-        );
     }
 }

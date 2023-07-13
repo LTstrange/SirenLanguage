@@ -3,6 +3,7 @@ pub use parser::SirenParser;
 mod interpreter;
 pub use interpreter::Environment;
 use interpreter::Value;
+mod lexer;
 
 // run a line of code on the given environment, and return the result
 pub fn run(env: &mut Environment, input: &str) -> Result<Option<Value>, String> {
