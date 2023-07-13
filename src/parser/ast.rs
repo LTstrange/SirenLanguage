@@ -1,6 +1,8 @@
 use std::fmt::{self, Debug, Formatter};
 
-pub type Program = Vec<Statement>;
+pub struct Program(pub BlockStmt);
+
+pub type BlockStmt = Vec<Statement>;
 
 #[derive(PartialEq, Clone)]
 pub enum Statement {
@@ -43,14 +45,23 @@ pub enum Expr {
     Literal(Literal),
     UnExpr(Prefix, Box<Expr>),
     BinExpr(Box<Expr>, Infix, Box<Expr>),
-    Function { params: Vec<String>, body: Program },
-    Call { func: Box<Expr>, args: Vec<Expr> },
-    Index { arr: Box<Expr>, index: Box<Expr> },
-    // If {
-    //     cond: Box<Expr>,
-    //     then: Box<Expr>,
-    //     els: Option<Box<Expr>>,
-    // },
+    Function {
+        params: Vec<String>,
+        body: BlockStmt,
+    },
+    Call {
+        func: Box<Expr>,
+        args: Vec<Expr>,
+    },
+    Index {
+        arr: Box<Expr>,
+        index: Box<Expr>,
+    },
+    If {
+        cond: Box<Expr>,
+        then: BlockStmt,
+        els: Option<BlockStmt>,
+    },
 }
 
 impl Debug for Expr {
@@ -80,6 +91,9 @@ impl Debug for Expr {
                     .join(", ")
             ),
             Expr::Index { arr, index } => todo!(),
+            Expr::If { cond, then, els } => {
+                write!(f, "if {:?} {{ {:?} }} else {{ {:?} }}", cond, then, els)
+            }
         }
     }
 }

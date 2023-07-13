@@ -9,7 +9,7 @@ use crate::lexer::{lexer, Tokens};
 
 pub struct SirenParser;
 impl SirenParser {
-    pub fn parse_file(input: &str) -> Result<Vec<Statement>, String> {
+    pub fn parse_file(input: &str) -> Result<Program, String> {
         let lexer = lexer(input);
         let tokens = Tokens::new(&lexer);
 

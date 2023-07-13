@@ -132,6 +132,25 @@ fn fn_expr(input: Tokens) -> IResult<Tokens, Expr> {
     )(input)
 }
 
+fn if_expr(input: Tokens) -> IResult<Tokens, Expr> {
+    map(
+        tuple((
+            if_tag,
+            expr,
+            delimited(lbrace_tag, block_stmt, rbrace_tag),
+            opt(preceded(
+                else_tag,
+                delimited(lbrace_tag, block_stmt, rbrace_tag),
+            )),
+        )),
+        |(_, cond, then, els)| Expr::If {
+            cond: Box::new(cond),
+            then,
+            els,
+        },
+    )(input)
+}
+
 fn parse_comma_exprs(input: Tokens) -> IResult<Tokens, Expr> {
     preceded(comma_tag, expr)(input)
 }
@@ -171,7 +190,14 @@ fn infix_expr(input: Tokens, left: Expr) -> IResult<Tokens, Expr> {
 }
 
 fn atom_expr(input: Tokens) -> IResult<Tokens, Expr> {
-    alt((literal, identity, prefix_expr, parent_expr, fn_expr))(input)
+    alt((
+        literal,
+        identity,
+        prefix_expr,
+        parent_expr,
+        fn_expr,
+        if_expr,
+    ))(input)
 }
 
 fn pratt_expr(input: Tokens, prec: Prec) -> IResult<Tokens, Expr> {
@@ -235,7 +261,7 @@ pub fn statement(input: Tokens) -> IResult<Tokens, Statement> {
     alt((return_stmt, let_stmt, set_stmt, expr_stmt))(input)
 }
 
-fn block_stmt(input: Tokens) -> IResult<Tokens, Vec<Statement>> {
+fn block_stmt(input: Tokens) -> IResult<Tokens, BlockStmt> {
     map(
         delimited(
             lbrace_tag,
@@ -252,7 +278,7 @@ fn block_stmt(input: Tokens) -> IResult<Tokens, Vec<Statement>> {
 }
 
 pub fn program(input: Tokens) -> IResult<Tokens, Program> {
-    many0(terminated(statement, semicolon_tag))(input)
+    map(many0(terminated(statement, semicolon_tag)), Program)(input)
 }
 
 #[cfg(test)]
@@ -328,6 +354,11 @@ mod test {
     fn boolean_test() {
         test!("true", literal, "true");
         test!("false", literal, "false");
+    }
+
+    #[test]
+    fn if_test() {
+        test!("if true { 123 }", expr, "if true { 123 }");
     }
 
     // #[test]

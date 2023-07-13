@@ -2,7 +2,9 @@ use std::{collections::HashMap, fmt::Display, iter::zip};
 
 use crate::parser::*;
 
+#[derive(Clone)]
 pub enum Value {
+    Unit,
     Int(i64),
     Bool(bool),
     Fn {
@@ -37,11 +39,12 @@ impl Display for Value {
                     .collect::<String>()
             ),
             Value::Bool(b) => write!(f, "{}", b),
+            Value::Unit => write!(f, "()"),
         }
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Environment {
     variables: HashMap<String, Value>,
 }
@@ -87,6 +90,7 @@ impl Environment {
                         body: body.clone(),
                     }),
                     Value::Bool(b) => Ok(Value::Bool(*b)),
+                    Value::Unit => Ok(Value::Unit),
                 },
                 None => Err("no such variable".to_string()),
             },
@@ -140,6 +144,7 @@ impl Environment {
                 }
             }
             Expr::Index { arr, index } => todo!(),
+            Expr::If { cond, then, els } => eval_if(self, self.eval_expr(cond)?, then, els),
         }
     }
 
@@ -189,6 +194,14 @@ fn eval_eql(left: Value, right: Value) -> Result<Value, String> {
         Value::Int(n) => Ok(Value::Bool(get_value!(right, Int)? == n)),
         Value::Bool(b) => Ok(Value::Bool(get_value!(right, Bool)? == b)),
         Value::Fn { .. } => Err("Cannot compare function".to_string()),
+        Value::Unit => match right {
+            Value::Unit => Ok(Value::Bool(true)),
+            _ => Err(format!(
+                "Not matched type: expect {}, found {}.",
+                stringify!(Value::Unit),
+                right
+            )),
+        },
     }
 }
 fn eval_neq(left: Value, right: Value) -> Result<Value, String> {
@@ -196,7 +209,43 @@ fn eval_neq(left: Value, right: Value) -> Result<Value, String> {
         Value::Int(n) => Ok(Value::Bool(get_value!(right, Int)? != n)),
         Value::Bool(b) => Ok(Value::Bool(get_value!(right, Bool)? != b)),
         Value::Fn { .. } => Err("Cannot compare function".to_string()),
+        Value::Unit => match right {
+            Value::Unit => Ok(Value::Bool(false)),
+            _ => Err(format!(
+                "Not matched type: expect {}, found {}.",
+                stringify!(Value::Unit),
+                right
+            )),
+        },
     }
+}
+
+fn eval_block(mut env: Environment, block: &Vec<Statement>) -> Result<Value, String> {
+    let mut result: Option<Value> = None;
+    for stmt in block {
+        if let Some(r) = env.eval(stmt.clone())? {
+            result = Some(r);
+        }
+    }
+    match result {
+        Some(value) => Ok(value),
+        None => Ok(Value::Unit),
+    }
+}
+
+fn eval_if(
+    env: &Environment,
+    cond: Value,
+    then: &BlockStmt,
+    els: &Option<BlockStmt>,
+) -> Result<Value, String> {
+    if get_value!(cond, Bool)? {
+        return eval_block(env.clone(), then);
+    } else if let Some(block) = els {
+        return eval_block(env.clone(), block);
+    }
+
+    todo!()
 }
 
 fn eval_func(
