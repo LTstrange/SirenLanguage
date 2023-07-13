@@ -221,8 +221,18 @@ fn let_stmt(input: Tokens) -> IResult<Tokens, Statement> {
     )(input)
 }
 
+fn set_stmt(input: Tokens) -> IResult<Tokens, Statement> {
+    map(
+        tuple((identity, assign_tag, expr)),
+        |(ident, _, value)| match ident {
+            Expr::Ident(name) => Statement::Set { name, value },
+            _ => unreachable!(),
+        },
+    )(input)
+}
+
 pub fn statement(input: Tokens) -> IResult<Tokens, Statement> {
-    alt((expr_stmt, return_stmt, let_stmt))(input)
+    alt((return_stmt, let_stmt, set_stmt, expr_stmt))(input)
 }
 
 fn block_stmt(input: Tokens) -> IResult<Tokens, Vec<Statement>> {
@@ -251,33 +261,106 @@ mod test {
     use super::*;
     use crate::lexer::{lexer, Token};
 
+    macro_rules! test {
+        ($input: literal, $parser: ident, $expect: literal) => {
+            let tokens: Vec<Token> = lexer($input);
+            let tokens = Tokens::new(&tokens);
+            assert_eq!(
+                $parser(tokens).map(|(_, x)| format!("{:?}", x)),
+                Ok($expect.to_string())
+            );
+        };
+    }
+
     #[test]
     fn test_parse_expr() {
-        let tokens: Vec<Token> = lexer("1 + 2 * abc + 4 * 5 - 6 / 7");
-        let tokens = Tokens::new(&tokens);
-        assert_eq!(
-            expr(tokens).map(|(_, x)| format!("{:?}", x)),
-            Ok("(((1 + (2 * abc)) + (4 * 5)) - (6 / 7))".to_string())
+        test!(
+            "1 + 2 * abc + 4 * 5 - 6 / 7",
+            expr,
+            "(((1 + (2 * abc)) + (4 * 5)) - (6 / 7))"
         );
+        test!(" 72 / 2 / 3 ", expr, "((72 / 2) / 3)");
     }
 
     #[test]
     fn test_prefix_expr() {
-        let tokens: Vec<Token> = lexer("1 + -2 * abc");
-        let tokens = Tokens::new(&tokens);
-        assert_eq!(
-            expr(tokens).map(|(_, x)| format!("{:?}", x)),
-            Ok("(1 + ((-2) * abc))".to_string())
-        )
+        test!("1 + -2 * abc", expr, "(1 + ((-2) * abc))");
+        test!("!false", expr, "(!false)");
+    }
+
+    #[test]
+    fn function_test() {
+        test!(
+            "fn(x, y) { x + y;  x - y}",
+            fn_expr,
+            "fn(x, y) { expr (x + y); return (x - y); }"
+        );
     }
 
     #[test]
     fn test_parent_expr() {
-        let tokens = lexer("(1 + 2) * 3");
-        let tokens = Tokens::new(&tokens);
-        assert_eq!(
-            expr(tokens).map(|(_, x)| format!("{:?}", x)),
-            Ok("((1 + 2) * 3)".to_string())
-        )
+        test!("(1 + 2) * 3", expr, "((1 + 2) * 3)");
     }
+
+    #[test]
+    fn statement_test() {
+        test!("let a = 123", statement, "let a = 123");
+        test!("123 + 254   ", statement, "expr (123 + 254)");
+        test!("let abc =123 + 254  ", statement, "let abc = (123 + 254)");
+        test!("abc =123 + 254  ", statement, "set abc = (123 + 254)");
+        test!(
+            "let abc = fn (a, b) {  a + b;}",
+            statement,
+            "let abc = fn(a, b) { expr (a + b); }"
+        );
+    }
+
+    #[test]
+    fn return_test() {
+        test!("return 123", return_stmt, "return 123");
+    }
+
+    #[test]
+    fn call_test() {
+        test!("let c = add(a, b)", statement, "let c = add.call(a, b)");
+    }
+    #[test]
+    fn boolean_test() {
+        test!("true", literal, "true");
+        test!("false", literal, "false");
+    }
+
+    // #[test]
+    // fn statements_test() {
+    //     assert_eq!(
+    //         program("  let a = 123 ;").map(|(_, stmts)| {
+
+    //                 stmts
+    //                     .iter()
+    //                     .map(|stmt| format!("{:?}", stmt))
+    //                     .collect::<Vec<String>>(),
+
+    //         }),
+    //         Ok( vec!["let a = 123".to_string(),],),
+    //     );
+    //     assert_eq!(
+    //         statements("  let a = 123 ;   123 - 12 / 4  ; a= b  ;").map(|(i, stmts)| {
+    //             (
+    //                 i,
+    //                 stmts
+    //                     .iter()
+    //                     .map(|stmt| format!("{:?}", stmt))
+    //                     .collect::<Vec<String>>(),
+    //             )
+    //         }),
+    //         Ok((
+    //             "",
+    //             vec![
+    //                 "let a = 123".to_string(),
+    //                 "expr (123 - (12 / 4))".to_string(),
+    //                 "set a = b".to_string()
+    //             ],
+    //         )),
+    //     );
+    // }
 }
