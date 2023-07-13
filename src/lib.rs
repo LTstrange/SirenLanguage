@@ -1,5 +1,4 @@
 mod parser;
-use parser::Program;
 pub use parser::SirenParser;
 mod interpreter;
 pub use interpreter::Environment;

@@ -143,7 +143,7 @@ impl Environment {
                     _ => Err("Calling non-function".to_string()),
                 }
             }
-            Expr::Index { arr, index } => todo!(),
+            Expr::Index { .. } => todo!(),
             Expr::If { cond, then, els } => eval_if(self, self.eval_expr(cond)?, then, els),
         }
     }

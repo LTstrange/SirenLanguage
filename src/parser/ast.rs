@@ -90,7 +90,7 @@ impl Debug for Expr {
                     .collect::<Vec<String>>()
                     .join(", ")
             ),
-            Expr::Index { arr, index } => todo!(),
+            Expr::Index { .. } => todo!(),
             Expr::If { cond, then, els } => {
                 write!(f, "if {:?} {{ {:?} }} else {{ {:?} }}", cond, then, els)
             }
