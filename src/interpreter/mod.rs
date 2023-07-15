@@ -95,10 +95,10 @@ impl Environment {
                 Infix::Div => self.eval_expr(l)? / self.eval_expr(r)?,
                 Infix::Eql => eval_eql(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Neq => eval_neq(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Lt => todo!(),
-                Infix::Gt => todo!(),
-                Infix::Lte => todo!(),
-                Infix::Gte => todo!(),
+                Infix::Lt => eval_lt(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Lte => eval_lte(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Gt => eval_gt(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Gte => eval_gte(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Call => unreachable!(),
                 Infix::Index => unreachable!(),
             },
@@ -173,6 +173,62 @@ fn eval_neq(left: Value, right: Value) -> Result<Value, String> {
         (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a != b)),
         (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
         (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+fn eval_lt(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a < b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+fn eval_lte(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a <= b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a <= b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(true)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+fn eval_gt(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a > b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a > b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+fn eval_gte(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a >= b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a >= b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(true)),
         _ => Err(format!(
             "Not matched type: left: {}, right: {}.",
             get_value_typename!(left),
