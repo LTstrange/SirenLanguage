@@ -1,11 +1,11 @@
 use colored::Colorize;
-use siren_language::{run, run_file, Environment};
+use siren_language::{run, run_file, Evaluator};
 use std::io::{self, Read, Write};
 
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
     // Create a new running environment
-    let mut env = Environment::new();
+    let mut env = Evaluator::new();
 
     if args.len() == 1 {
         repl(&mut env);
@@ -19,7 +19,7 @@ fn main() {
     }
 }
 
-fn repl(env: &mut Environment) {
+fn repl(evaluator: &mut Evaluator) {
     // repl
     loop {
         print!("> ");
@@ -35,7 +35,7 @@ fn repl(env: &mut Environment) {
             "" => continue,
             "quit" | "q" => break,
             // run input on the environment
-            input => match run(env, input) {
+            input => match run(evaluator, input) {
                 Ok(output) => match output {
                     Some(number) => println!("{}", number), // print the result
                     None => continue, // print nothing because of let statement
@@ -46,13 +46,13 @@ fn repl(env: &mut Environment) {
     }
 }
 
-fn file_interpreter(env: &mut Environment, file_name: &str) {
+fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
     let mut file = std::fs::File::open(file_name).unwrap();
     let mut content = String::new();
     file.read_to_string(&mut content).unwrap();
     println!("Content:");
     println!("{}", content);
-    match run_file(env, content) {
+    match run_file(evaluator, content) {
         Ok(()) => println!("Done."),
         Err(msg) => {
             println!("{}", format!("Error: {}", msg).red());
@@ -60,5 +60,5 @@ fn file_interpreter(env: &mut Environment, file_name: &str) {
     }
 
     println!("Env:"); // print variables in the environment
-    println!("{}", env);
+    println!("{}", evaluator.env.borrow());
 }

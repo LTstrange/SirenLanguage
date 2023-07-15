@@ -72,6 +72,7 @@ b = -39
     - [x] not operator
     - [x] eql operator
     - [x] not eql operator
-  - [ ] if expression
+  - [x] if expression
     - [x] if parser
-    - [ ] block statement
+    - [x] block statement
+    - [ ] side effect

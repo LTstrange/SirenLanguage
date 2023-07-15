@@ -1,9 +1,10 @@
 mod value;
 
-use std::{collections::HashMap, fmt::Display, iter::zip};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, iter::zip, rc::Rc};
 
 use crate::parser::*;
 pub use value::Value;
+use value::*;
 
 macro_rules! get_value {
     ($value: expr, $type: ident) => {
@@ -18,19 +19,9 @@ macro_rules! get_value {
     };
 }
 
-macro_rules! get_value_typename {
-    ($value: ident) => {
-        match $value {
-            Value::Unit => "Unit",
-            Value::Int(_) => "Int",
-            Value::Bool(_) => "Bool",
-            Value::Fn { .. } => "Fn",
-        }
-    };
-}
-
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct Environment {
+    parent: Option<Rc<RefCell<Environment>>>,
     variables: HashMap<String, Value>,
 }
 
@@ -44,8 +35,60 @@ impl Display for Environment {
 }
 
 impl Environment {
+    // bind variable to the variable table
+    fn bind(&mut self, name: &str, value: Value) -> Result<(), &str> {
+        if self.variables.contains_key(name) {
+            return Err("Variable already exists");
+        }
+        self.variables.insert(name.to_string(), value);
+        Ok(())
+    }
+
+    // set(update) variable in the variable table
+    fn set(&mut self, name: &str, value: Value) -> Result<(), String> {
+        match self.variables.get_mut(name) {
+            Some(origin) => {
+                *origin = value;
+                Ok(())
+            }
+            None => match &mut self.parent {
+                Some(parent) => parent.borrow_mut().set(name, value),
+                None => Err(format!("no such variable: {}", name)),
+            },
+        }
+    }
+    fn get(&self, name: &str) -> Option<Value> {
+        match self.variables.get(name).cloned() {
+            Some(value) => Some(value),
+            None => match &self.parent {
+                Some(parent) => parent.borrow().get(name),
+                None => None,
+            },
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct Evaluator {
+    pub env: Rc<RefCell<Environment>>,
+}
+
+impl Evaluator {
     pub fn new() -> Self {
-        Environment::default()
+        Evaluator::default()
+    }
+
+    fn init_with_exist(env: Rc<RefCell<Environment>>) -> Self {
+        Evaluator { env }
+    }
+
+    fn init_with_parent(parent: Rc<RefCell<Environment>>) -> Self {
+        Self {
+            env: Rc::new(RefCell::new(Environment {
+                parent: Some(parent),
+                ..Default::default()
+            })),
+        }
     }
 
     // evaluate oneline code
@@ -53,13 +96,13 @@ impl Environment {
         match ast {
             Statement::Let { name, ref value } => {
                 let value = self.eval_expr(value)?;
-                self.bind(&name, value)?;
+                self.env.borrow_mut().bind(&name, value)?;
                 Ok(None)
             }
             Statement::Expr(expr) => Ok(Some(self.eval_expr(&expr)?)),
             Statement::Set { name, value } => {
                 let value = self.eval_expr(&value)?;
-                self.set(&name, value)?;
+                self.env.borrow_mut().set(&name, value)?;
                 Ok(None)
             }
             Statement::Return(ret) => Ok(Some(self.eval_expr(&ret)?)),
@@ -69,9 +112,9 @@ impl Environment {
     // evaluate expression
     fn eval_expr(&mut self, expr: &Expr) -> Result<Value, String> {
         match expr {
-            Expr::Ident(ident) => match self.get(ident) {
-                Some(n) => Ok(n.clone()),
-                None => Err("no such variable".to_string()),
+            Expr::Ident(ident) => match self.env.borrow_mut().get(ident) {
+                Some(n) => Ok(n),
+                None => Err(format!("no such variable: {}", ident)),
             },
             Expr::Literal(literal) => match literal {
                 Literal::Int(n) => Ok(Value::Int(*n)),
@@ -93,12 +136,12 @@ impl Environment {
                 Infix::Sub => self.eval_expr(l)? - self.eval_expr(r)?,
                 Infix::Mul => self.eval_expr(l)? * self.eval_expr(r)?,
                 Infix::Div => self.eval_expr(l)? / self.eval_expr(r)?,
-                Infix::Eql => eval_eql(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Neq => eval_neq(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Lt => eval_lt(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Lte => eval_lte(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Gt => eval_gt(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Gte => eval_gte(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Eql => calc_eql(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Neq => calc_neq(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Lt => calc_lt(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Lte => calc_lte(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Gt => calc_gt(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Gte => calc_gte(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Call => unreachable!(),
                 Infix::Index => unreachable!(),
             },
@@ -109,13 +152,17 @@ impl Environment {
                     .collect::<Result<Vec<Value>, String>>()?;
                 match func.as_ref() {
                     Expr::Ident(func_name) => {
-                        let func = self.get(func_name).ok_or("no such function")?;
+                        let func = self
+                            .env
+                            .borrow()
+                            .get(func_name)
+                            .ok_or(format!("no such function: {}", func_name))?;
                         let (params, body) = match func {
                             Value::Fn { params, body } => Ok((params, body)),
                             _ => Err("this is not a function".to_string()),
                         }?;
 
-                        eval_func(params, args, body, Some(func_name))
+                        eval_func(&params, args, &body, Some(func_name))
                     }
                     Expr::Function { params, body } => eval_func(params, args, body, None),
                     _ => Err("Calling non-function".to_string()),
@@ -124,145 +171,39 @@ impl Environment {
             Expr::Index { .. } => todo!(),
             Expr::If { cond, then, els } => {
                 let cond = self.eval_expr(cond)?;
-                eval_if(self, cond, then, els)
+                self.eval_if(cond, then, els)
             }
         }
     }
 
-    // bind variable to the variable table
-    fn bind(&mut self, name: &str, value: Value) -> Result<(), &str> {
-        if self.variables.contains_key(name) {
-            return Err("Variable already exists");
-        }
-        self.variables.insert(name.to_string(), value);
-        Ok(())
-    }
-
-    // set(update) variable in the variable table
-    fn set(&mut self, name: &str, value: Value) -> Result<(), String> {
-        if !self.variables.contains_key(name) {
-            return Err("Variable not exists".to_string());
-        }
-        match self.variables.get_mut(name) {
-            Some(origin) => *origin = value,
-            None => return Err("Variable not exists".to_string()),
-        }
-        Ok(())
-    }
-    fn get(&self, name: &str) -> Option<&Value> {
-        self.variables.get(name)
-    }
-}
-
-fn eval_eql(left: Value, right: Value) -> Result<Value, String> {
-    match (&left, &right) {
-        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a == b)),
-        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a == b)),
-        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
-        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
-        _ => Err(format!(
-            "Not matched type: left: {}, right: {}.",
-            get_value_typename!(left),
-            get_value_typename!(right)
-        )),
-    }
-}
-fn eval_neq(left: Value, right: Value) -> Result<Value, String> {
-    match (&left, &right) {
-        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a != b)),
-        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a != b)),
-        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
-        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
-        _ => Err(format!(
-            "Not matched type: left: {}, right: {}.",
-            get_value_typename!(left),
-            get_value_typename!(right)
-        )),
-    }
-}
-
-fn eval_lt(left: Value, right: Value) -> Result<Value, String> {
-    match (&left, &right) {
-        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
-        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a < b)),
-        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
-        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
-        _ => Err(format!(
-            "Not matched type: left: {}, right: {}.",
-            get_value_typename!(left),
-            get_value_typename!(right)
-        )),
-    }
-}
-
-fn eval_lte(left: Value, right: Value) -> Result<Value, String> {
-    match (&left, &right) {
-        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a <= b)),
-        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a <= b)),
-        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
-        (Value::Unit, Value::Unit) => Ok(Value::Bool(true)),
-        _ => Err(format!(
-            "Not matched type: left: {}, right: {}.",
-            get_value_typename!(left),
-            get_value_typename!(right)
-        )),
-    }
-}
-
-fn eval_gt(left: Value, right: Value) -> Result<Value, String> {
-    match (&left, &right) {
-        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a > b)),
-        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a > b)),
-        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
-        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
-        _ => Err(format!(
-            "Not matched type: left: {}, right: {}.",
-            get_value_typename!(left),
-            get_value_typename!(right)
-        )),
-    }
-}
-
-fn eval_gte(left: Value, right: Value) -> Result<Value, String> {
-    match (&left, &right) {
-        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a >= b)),
-        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a >= b)),
-        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
-        (Value::Unit, Value::Unit) => Ok(Value::Bool(true)),
-        _ => Err(format!(
-            "Not matched type: left: {}, right: {}.",
-            get_value_typename!(left),
-            get_value_typename!(right)
-        )),
-    }
-}
-
-fn eval_block(mut env: Environment, block: &Vec<Statement>) -> Result<Value, String> {
-    let mut result: Option<Value> = None;
-    for stmt in block {
-        if let Some(r) = env.eval(stmt.clone())? {
-            result = Some(r);
+    fn eval_if(
+        &mut self,
+        cond: Value,
+        then: &BlockStmt,
+        els: &Option<BlockStmt>,
+    ) -> Result<Value, String> {
+        if get_value!(cond, Bool)? {
+            self.eval_block(then)
+        } else if let Some(block) = els {
+            self.eval_block(block)
+        } else {
+            Ok(Value::Unit) // todo : type check system
         }
     }
-    match result {
-        Some(value) => Ok(value),
-        None => Ok(Value::Unit),
-    }
-}
 
-fn eval_if(
-    env: &Environment,
-    cond: Value,
-    then: &BlockStmt,
-    els: &Option<BlockStmt>,
-) -> Result<Value, String> {
-    if get_value!(cond, Bool)? {
-        return eval_block(env.clone(), then);
-    } else if let Some(block) = els {
-        return eval_block(env.clone(), block);
+    fn eval_block(&mut self, block: &BlockStmt) -> Result<Value, String> {
+        let mut inner_evaluator = Self::init_with_parent(self.env.clone());
+        let mut result: Option<Value> = None;
+        for stmt in block {
+            if let Some(r) = inner_evaluator.eval(stmt.clone())? {
+                result = Some(r);
+            }
+        }
+        match result {
+            Some(value) => Ok(value),
+            None => Ok(Value::Unit),
+        }
     }
-
-    todo!()
 }
 
 fn eval_func(
@@ -271,7 +212,14 @@ fn eval_func(
     body: &Vec<Statement>,
     self_func: Option<&str>,
 ) -> Result<Value, String> {
-    let mut env = Environment::new();
+    let mut env = Environment::default();
+    if args.len() != params.len() {
+        return Err(format!(
+            "expect {} parameters, found {}",
+            params.len(),
+            args.len()
+        ));
+    }
     if let Some(name) = self_func {
         env.bind(
             name,
@@ -284,9 +232,12 @@ fn eval_func(
     for (param, arg) in zip(params, args) {
         env.bind(param, arg)?;
     }
+    let mut evaluator = Evaluator::init_with_exist(Rc::new(RefCell::new(env)));
+    println!("{}", evaluator.env.borrow());
+
     let mut result: Option<Value> = None;
     for stmt in body {
-        if let Some(r) = env.eval(stmt.clone())? {
+        if let Some(r) = evaluator.eval(stmt.clone())? {
             result = Some(r);
         }
     }

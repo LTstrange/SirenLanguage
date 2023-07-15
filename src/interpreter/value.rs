@@ -5,6 +5,17 @@ use std::{
 
 use crate::parser::Statement;
 
+macro_rules! get_value_typename {
+    ($value: ident) => {
+        match $value {
+            Value::Unit => "Unit",
+            Value::Int(_) => "Int",
+            Value::Bool(_) => "Bool",
+            Value::Fn { .. } => "Fn",
+        }
+    };
+}
+
 #[derive(Clone)]
 pub enum Value {
     Unit,
@@ -71,5 +82,88 @@ impl Div for Value {
             (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a / b)),
             _ => Err("Expect int type".to_string()),
         }
+    }
+}
+
+pub fn calc_eql(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a == b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a == b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+pub fn calc_neq(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a != b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a != b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+pub fn calc_lt(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a < b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+pub fn calc_lte(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a <= b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a <= b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(true)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+pub fn calc_gt(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a > b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a > b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
+    }
+}
+
+pub fn calc_gte(left: Value, right: Value) -> Result<Value, String> {
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a >= b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a >= b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(true)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
     }
 }
