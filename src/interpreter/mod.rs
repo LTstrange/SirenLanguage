@@ -78,10 +78,10 @@ impl Environment {
                 }
             }
             Expr::BinExpr(ref l, op, ref r) => match op {
-                Infix::Add => eval_add(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Sub => eval_sub(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Mul => eval_mul(self.eval_expr(l)?, self.eval_expr(r)?),
-                Infix::Div => eval_div(self.eval_expr(l)?, self.eval_expr(r)?),
+                Infix::Add => self.eval_expr(l)? + self.eval_expr(r)?,
+                Infix::Sub => self.eval_expr(l)? - self.eval_expr(r)?,
+                Infix::Mul => self.eval_expr(l)? * self.eval_expr(r)?,
+                Infix::Div => self.eval_expr(l)? / self.eval_expr(r)?,
                 Infix::Eql => eval_eql(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Neq => eval_neq(self.eval_expr(l)?, self.eval_expr(r)?),
                 Infix::Lt => todo!(),
@@ -141,22 +141,6 @@ impl Environment {
     fn get(&self, name: &str) -> Option<&Value> {
         self.variables.get(name)
     }
-}
-
-fn eval_add(left: Value, right: Value) -> Result<Value, String> {
-    Ok(Value::Int(get_value!(left, Int)? + get_value!(right, Int)?))
-}
-
-fn eval_sub(left: Value, right: Value) -> Result<Value, String> {
-    Ok(Value::Int(get_value!(left, Int)? - get_value!(right, Int)?))
-}
-
-fn eval_mul(left: Value, right: Value) -> Result<Value, String> {
-    Ok(Value::Int(get_value!(left, Int)? * get_value!(right, Int)?))
-}
-
-fn eval_div(left: Value, right: Value) -> Result<Value, String> {
-    Ok(Value::Int(get_value!(left, Int)? / get_value!(right, Int)?))
 }
 
 fn eval_eql(left: Value, right: Value) -> Result<Value, String> {
