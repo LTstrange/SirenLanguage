@@ -137,11 +137,8 @@ fn if_expr(input: Tokens) -> IResult<Tokens, Expr> {
         tuple((
             if_tag,
             expr,
-            delimited(lbrace_tag, block_stmt, rbrace_tag),
-            opt(preceded(
-                else_tag,
-                delimited(lbrace_tag, block_stmt, rbrace_tag),
-            )),
+            block_stmt,
+            opt(preceded(else_tag, block_stmt)),
         )),
         |(_, cond, then, els)| Expr::If {
             cond: Box::new(cond),
@@ -358,40 +355,22 @@ mod test {
 
     #[test]
     fn if_test() {
-        test!("if true { 123 }", expr, "if true { 123 }");
+        test!("if true { 123 }", if_expr, "if true { [return 123] }");
+        test!(
+            "if true { 123 } else { 234}",
+            if_expr,
+            "if true { [return 123] } else { [return 234] }"
+        );
     }
 
-    // #[test]
-    // fn statements_test() {
-    //     assert_eq!(
-    //         program("  let a = 123 ;").map(|(_, stmts)| {
-
-    //                 stmts
-    //                     .iter()
-    //                     .map(|stmt| format!("{:?}", stmt))
-    //                     .collect::<Vec<String>>(),
-
-    //         }),
-    //         Ok( vec!["let a = 123".to_string(),],),
-    //     );
-    //     assert_eq!(
-    //         statements("  let a = 123 ;   123 - 12 / 4  ; a= b  ;").map(|(i, stmts)| {
-    //             (
-    //                 i,
-    //                 stmts
-    //                     .iter()
-    //                     .map(|stmt| format!("{:?}", stmt))
-    //                     .collect::<Vec<String>>(),
-    //             )
-    //         }),
-    //         Ok((
-    //             "",
-    //             vec![
-    //                 "let a = 123".to_string(),
-    //                 "expr (123 - (12 / 4))".to_string(),
-    //                 "set a = b".to_string()
-    //             ],
-    //         )),
-    //     );
-    // }
+    #[test]
+    fn blockstmt_test() {
+        test!("{ 123 }", block_stmt, "[return 123]");
+        test!("{let a = 123;}", block_stmt, "[let a = 123]");
+        test!(
+            "{let a = 123; 123 - 12 / 4  ; a= b  ;}",
+            block_stmt,
+            "[let a = 123, expr (123 - (12 / 4)), set a = b]"
+        );
+    }
 }

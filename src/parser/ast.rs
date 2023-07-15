@@ -91,9 +91,14 @@ impl Debug for Expr {
                     .join(", ")
             ),
             Expr::Index { .. } => todo!(),
-            Expr::If { cond, then, els } => {
-                write!(f, "if {:?} {{ {:?} }} else {{ {:?} }}", cond, then, els)
-            }
+            Expr::If { cond, then, els } => match els {
+                Some(els_block) => write!(
+                    f,
+                    "if {:?} {{ {:?} }} else {{ {:?} }}",
+                    cond, then, els_block
+                ),
+                None => write!(f, "if {:?} {{ {:?} }}", cond, then),
+            },
         }
     }
 }
