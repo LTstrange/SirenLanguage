@@ -67,12 +67,14 @@ impl Environment {
     pub fn eval(&mut self, ast: Statement) -> Result<Option<Value>, String> {
         match ast {
             Statement::Let { name, ref value } => {
-                self.bind(&name, self.eval_expr(value)?)?;
+                let value = self.eval_expr(value)?;
+                self.bind(&name, value)?;
                 Ok(None)
             }
             Statement::Expr(expr) => Ok(Some(self.eval_expr(&expr)?)),
             Statement::Set { name, value } => {
-                self.set(&name, self.eval_expr(&value)?)?;
+                let value = self.eval_expr(&value)?;
+                self.set(&name, value)?;
                 Ok(None)
             }
             Statement::Return(ret) => Ok(Some(self.eval_expr(&ret)?)),
@@ -80,7 +82,7 @@ impl Environment {
     }
 
     // evaluate expression
-    fn eval_expr(&self, expr: &Expr) -> Result<Value, String> {
+    fn eval_expr(&mut self, expr: &Expr) -> Result<Value, String> {
         match expr {
             Expr::Ident(ident) => match self.get(ident) {
                 Some(n) => Ok(n.clone()),
@@ -135,7 +137,10 @@ impl Environment {
                 }
             }
             Expr::Index { .. } => todo!(),
-            Expr::If { cond, then, els } => eval_if(self, self.eval_expr(cond)?, then, els),
+            Expr::If { cond, then, els } => {
+                let cond = self.eval_expr(cond)?;
+                eval_if(self, cond, then, els)
+            }
         }
     }
 
