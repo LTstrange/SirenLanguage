@@ -18,36 +18,37 @@ true
 > true
 true
 ```
-File interpret: `cargo r test1.siren`
+
+
+
+File interpret: `cargo r examples/fib.siren`
 test1.siren:
 ```
-let a = 123 - 12 / 4;
-let b = (-a + 42) / 2;
-
-let add = fn (a, b) {
-    return a + b;
+let fib = fn (n) {
+    if n <= 1 {
+        1
+    } else {
+        fib(n - 1) + fib(n - 2)
+    }
 };
 
-let one = fn () {
-    1
-};
-
-let c = add(a, b);
+let a = fib(5);
 ```
 output:
 ```
-Content:
-let a = 123 - 12 / 4;
-let b = (-a + 42) / 2;
-[...]
-let c = add(a, b);
+let fib = fn (n) {
+    if n <= 1 {
+        1
+    } else {
+        fib(n - 1) + fib(n - 2)
+    }
+};
+
+let a = fib(5);
 Done.
 Env:
-add = fn (a, b) { return (a + b); }
-one = fn () { return 1; }
-c = 81
-a = 120
-b = -39
+a = 8
+fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib.call((n - 1)) + fib.call((n - 2)))] }; }
 ```
 
 ## Todolist

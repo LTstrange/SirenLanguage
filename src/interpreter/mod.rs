@@ -233,7 +233,6 @@ fn eval_func(
         env.bind(param, arg)?;
     }
     let mut evaluator = Evaluator::init_with_exist(Rc::new(RefCell::new(env)));
-    println!("{}", evaluator.env.borrow());
 
     let mut result: Option<Value> = None;
     for stmt in body {
