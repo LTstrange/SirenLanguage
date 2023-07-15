@@ -18,6 +18,17 @@ macro_rules! get_value {
     };
 }
 
+macro_rules! get_value_typename {
+    ($value: ident) => {
+        match $value {
+            Value::Unit => "Unit",
+            Value::Int(_) => "Int",
+            Value::Bool(_) => "Bool",
+            Value::Fn { .. } => "Fn",
+        }
+    };
+}
+
 #[derive(Default, Clone)]
 pub struct Environment {
     variables: HashMap<String, Value>,
@@ -144,33 +155,29 @@ impl Environment {
 }
 
 fn eval_eql(left: Value, right: Value) -> Result<Value, String> {
-    match left {
-        Value::Int(n) => Ok(Value::Bool(get_value!(right, Int)? == n)),
-        Value::Bool(b) => Ok(Value::Bool(get_value!(right, Bool)? == b)),
-        Value::Fn { .. } => Err("Cannot compare function".to_string()),
-        Value::Unit => match right {
-            Value::Unit => Ok(Value::Bool(true)),
-            _ => Err(format!(
-                "Not matched type: expect {}, found {}.",
-                stringify!(Value::Unit),
-                right
-            )),
-        },
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a == b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a == b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
     }
 }
 fn eval_neq(left: Value, right: Value) -> Result<Value, String> {
-    match left {
-        Value::Int(n) => Ok(Value::Bool(get_value!(right, Int)? != n)),
-        Value::Bool(b) => Ok(Value::Bool(get_value!(right, Bool)? != b)),
-        Value::Fn { .. } => Err("Cannot compare function".to_string()),
-        Value::Unit => match right {
-            Value::Unit => Ok(Value::Bool(false)),
-            _ => Err(format!(
-                "Not matched type: expect {}, found {}.",
-                stringify!(Value::Unit),
-                right
-            )),
-        },
+    match (&left, &right) {
+        (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a != b)),
+        (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a != b)),
+        (Value::Fn { .. }, _) => Err("Cannot compare function".to_string()),
+        (Value::Unit, Value::Unit) => Ok(Value::Bool(false)),
+        _ => Err(format!(
+            "Not matched type: left: {}, right: {}.",
+            get_value_typename!(left),
+            get_value_typename!(right)
+        )),
     }
 }
 
