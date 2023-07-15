@@ -83,15 +83,7 @@ impl Environment {
     fn eval_expr(&self, expr: &Expr) -> Result<Value, String> {
         match expr {
             Expr::Ident(ident) => match self.get(ident) {
-                Some(n) => match n {
-                    Value::Int(i) => Ok(Value::Int(*i)),
-                    Value::Fn { params, body } => Ok(Value::Fn {
-                        params: params.clone(),
-                        body: body.clone(),
-                    }),
-                    Value::Bool(b) => Ok(Value::Bool(*b)),
-                    Value::Unit => Ok(Value::Unit),
-                },
+                Some(n) => Ok(n.clone()),
                 None => Err("no such variable".to_string()),
             },
             Expr::Literal(literal) => match literal {
@@ -102,7 +94,6 @@ impl Environment {
                 params: params.to_owned(),
                 body: body.to_owned(),
             }),
-            // Expr::UnExpr(_, ref n) => Ok(Value::Int(-get_value!(self.eval_expr(n)?, Int)?)),
             Expr::UnExpr(op, ref n) => {
                 let value = self.eval_expr(n)?;
                 match op {
