@@ -21,8 +21,7 @@ true
 
 
 
-File interpret: `cargo r examples/fib.siren`
-test1.siren:
+File interpret: `cargo r examples/fib.siren`:
 ```
 let fib = fn (n) {
     if n <= 1 {
