@@ -73,5 +73,5 @@ b = -39
     - [x] eql operator
     - [x] not eql operator
   - [ ] if expression
-    - [ ] if parser
+    - [x] if parser
     - [ ] block statement
