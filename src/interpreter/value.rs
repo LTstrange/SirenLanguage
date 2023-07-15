@@ -1,4 +1,7 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    ops::{Add, Div, Mul, Sub},
+};
 
 use crate::parser::Statement;
 
@@ -27,6 +30,46 @@ impl Display for Value {
             ),
             Value::Bool(b) => write!(f, "{}", b),
             Value::Unit => write!(f, "()"),
+        }
+    }
+}
+
+impl Add for Value {
+    type Output = Result<Value, String>;
+    fn add(self, other: Value) -> Result<Value, String> {
+        match (self, other) {
+            (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a + b)),
+            _ => Err("Expect int type".to_string()),
+        }
+    }
+}
+
+impl Sub for Value {
+    type Output = Result<Value, String>;
+    fn sub(self, other: Value) -> Result<Value, String> {
+        match (self, other) {
+            (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a - b)),
+            _ => Err("Expect int type".to_string()),
+        }
+    }
+}
+
+impl Mul for Value {
+    type Output = Result<Value, String>;
+    fn mul(self, other: Value) -> Result<Value, String> {
+        match (self, other) {
+            (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a * b)),
+            _ => Err("Expect int type".to_string()),
+        }
+    }
+}
+
+impl Div for Value {
+    type Output = Result<Value, String>;
+    fn div(self, other: Value) -> Result<Value, String> {
+        match (self, other) {
+            (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a / b)),
+            _ => Err("Expect int type".to_string()),
         }
     }
 }
