@@ -40,7 +40,7 @@ fn repl(evaluator: &mut Evaluator) {
                     Some(number) => println!("{}", number), // print the result
                     None => continue, // print nothing because of let statement
                 },
-                Err(msg) => println!("{}", format!("Error: {}", msg).red()), // print error
+                Err(msg) => println!("{}", format!("Error: {}", msg).red()),
             },
         }
     }
@@ -58,14 +58,15 @@ fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
                 Ok(()) => println!("Done."),
                 Err(msg) => {
                     println!("{}", format!("Error: {}", msg).red());
-                } // print error
+                }
             }
 
             println!("Env:"); // print variables in the environment
             println!("{}", evaluator.env.borrow());
         }
         Err(msg) => {
+            // not such file
             println!("{}", format!("Error: {}", msg).red());
-        } // print error
+        }
     }
 }
