@@ -4,6 +4,21 @@ I'm trying to make a simple programming language called Siren Language.
 
 This language will become a graphic and text programming language.
 
+## features
+- REPL
+- Datatypes:
+  - int, bool, fn, unit
+- Arithmetic expressions:
+  - `+ - * /`
+- compare operators:
+  - `== != < > <= >=`
+- let and set statements
+- Functions:
+  - Are first class and are all pure function, means has no side effects.
+  - Recursion supported
+
+
+
 ## example
 REPL: `cargo r`
 ```
@@ -54,6 +69,8 @@ fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib.call((n - 1
 
 1. minimum REPL
   - [x] minimum amount of datatype: int, fn, bool, unit
+    - [ ] float
+    - [ ] string
   - [x] expressions:
     - Infix: `+ - * / == != < <= > >=`
     - Prefix: `- !`
