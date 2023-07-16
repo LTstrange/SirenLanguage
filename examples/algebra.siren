@@ -10,3 +10,4 @@ let abs = fn (x) {
 };
 
 let c = abs(b);
+let d = add(a, b);

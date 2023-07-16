@@ -47,18 +47,25 @@ fn repl(evaluator: &mut Evaluator) {
 }
 
 fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
-    let mut file = std::fs::File::open(file_name).unwrap();
-    let mut content = String::new();
-    file.read_to_string(&mut content).unwrap();
-    println!("Content:");
-    println!("{}", content);
-    match run_file(evaluator, content) {
-        Ok(()) => println!("Done."),
+    let file = std::fs::File::open(file_name);
+    match file {
+        Ok(mut file) => {
+            let mut content = String::new();
+            file.read_to_string(&mut content).unwrap();
+            println!("Content:");
+            println!("{}", content);
+            match run_file(evaluator, content) {
+                Ok(()) => println!("Done."),
+                Err(msg) => {
+                    println!("{}", format!("Error: {}", msg).red());
+                } // print error
+            }
+
+            println!("Env:"); // print variables in the environment
+            println!("{}", evaluator.env.borrow());
+        }
         Err(msg) => {
             println!("{}", format!("Error: {}", msg).red());
         } // print error
     }
-
-    println!("Env:"); // print variables in the environment
-    println!("{}", evaluator.env.borrow());
 }
