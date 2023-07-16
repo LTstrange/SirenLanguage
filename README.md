@@ -53,26 +53,18 @@ fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib.call((n - 1
 ## Todolist
 
 1. minimum REPL
-  - [x] minimum amount of datatype: int, fn, bool
+  - [x] minimum amount of datatype: int, fn, bool, unit
   - [x] expressions:
-    - Infix: `+ - * /`
+    - Infix: `+ - * / == != < <= > >=`
     - Prefix: `- !`
   - [x] variables(identifier): `abc foo bar`
-    - let statement
-    - set statement
 
 2. minimum interpreter for file
   - [x] variable type system
-  - [x] fn (function):
-    - [x] fn parser
-    - [x] bind function
-    - [x] fn call
-    - [x] return statement
-  - [x] boolean operator
-    - [x] not operator
-    - [x] eql operator
-    - [x] not eql operator
+    - [ ] type annotations
+    - [ ] type checking
+  - [x] fn (function)
   - [x] if expression
-    - [x] if parser
-    - [x] block statement
-    - [ ] side effect
+  - [ ] for loop
+  - [ ] basic struct and enum
+  - [ ] input output
