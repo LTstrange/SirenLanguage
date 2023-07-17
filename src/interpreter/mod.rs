@@ -71,6 +71,9 @@ impl Environment {
 #[derive(Default)]
 pub struct Evaluator {
     // todo : use stack-like evaluator to solve "return in block" problem
+    // Every function will only have one evaluator,
+    // so it might be better to integrate eval_func within evaluator, but in more organic way.
+    // and that might be a better way to solve "return in block" problem.
     pub env: Rc<RefCell<Environment>>,
     ret_value: Option<Value>,
 }
