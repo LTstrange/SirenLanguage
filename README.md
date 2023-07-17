@@ -14,8 +14,10 @@ This language will become a graphic and text programming language.
   - `== != < > <= >=`
 - let and set statements
 - Functions:
-  - Are first class and are all pure function, means has no side effects.
-  - Recursion supported
+  - They are first-class, meaning they can be treated as values and passed as arguments, returned from other functions, and assigned to variables.
+  - All functions are pure from the outside, having no side effects on the external environment when called.
+  - But, functions may have side effects internally. Like perform I/O operations.
+  - Recursion is supported.
 
 
 
