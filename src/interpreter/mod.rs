@@ -151,6 +151,7 @@ impl Evaluator {
                     .map(|arg| self.eval_expr(arg))
                     .collect::<Result<Vec<Value>, String>>()?;
                 match func.as_ref() {
+                    // call on func identity
                     Expr::Ident(func_name) => {
                         let func = self
                             .env
@@ -164,7 +165,7 @@ impl Evaluator {
 
                         eval_func(&params, args, &body, Some(func_name))
                     }
-                    Expr::Function { params, body } => eval_func(params, args, body, None),
+                    // instant call on anonymous function
                     _ => Err("Calling non-function".to_string()),
                 }
             }
