@@ -78,7 +78,7 @@ fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib(n - 1) + fi
     - Prefix: `- !`
   - [x] variables(identifier): `abc foo bar`
 
-2. minimum interpreter for file
+2. interpreter for file
   - [x] variable type system
     - [ ] type annotations
     - [ ] type checking
