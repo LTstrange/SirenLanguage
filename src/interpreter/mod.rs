@@ -70,6 +70,7 @@ impl Environment {
 
 #[derive(Default)]
 pub struct Evaluator {
+    // todo : use stack-like evaluator to solve "return in block" problem
     pub env: Rc<RefCell<Environment>>,
     ret_value: Option<Value>,
 }
