@@ -52,8 +52,8 @@ fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
         Ok(mut file) => {
             let mut content = String::new();
             file.read_to_string(&mut content).unwrap();
-            println!("Content:");
-            println!("{}", content);
+            // println!("Content:");
+            // println!("{}", content);
             match run_file(evaluator, content) {
                 Ok(()) => println!("Done."),
                 Err(msg) => {

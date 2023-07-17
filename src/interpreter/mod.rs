@@ -71,6 +71,7 @@ impl Environment {
 #[derive(Default)]
 pub struct Evaluator {
     pub env: Rc<RefCell<Environment>>,
+    ret_value: Option<Value>,
 }
 
 impl Evaluator {
@@ -79,7 +80,10 @@ impl Evaluator {
     }
 
     fn init_with_exist(env: Rc<RefCell<Environment>>) -> Self {
-        Evaluator { env }
+        Evaluator {
+            env,
+            ..Default::default()
+        }
     }
 
     fn init_with_parent(parent: Rc<RefCell<Environment>>) -> Self {
@@ -88,6 +92,7 @@ impl Evaluator {
                 parent: Some(parent),
                 ..Default::default()
             })),
+            ..Default::default()
         }
     }
 
@@ -166,6 +171,7 @@ impl Evaluator {
                         eval_func(&params, args, &body, Some(func_name))
                     }
                     // instant call on anonymous function
+                    Expr::Function { params, body } => eval_func(params, args, body, None),
                     _ => Err("Calling non-function".to_string()),
                 }
             }
@@ -196,6 +202,21 @@ impl Evaluator {
         let mut inner_evaluator = Self::init_with_parent(self.env.clone());
         let mut result: Option<Value> = None;
         for stmt in block {
+            match stmt {
+                Statement::Expr(_) => {
+                    result = inner_evaluator.eval(stmt.clone())?;
+                }
+                Statement::Return(_) => match inner_evaluator.eval(stmt.clone())? {
+                    Some(value) => {
+                        self.ret_value = Some(value.clone());
+                        return Ok(value);
+                    }
+                    None => return Err("Return statement without return value".to_string()),
+                },
+                _ => {
+                    inner_evaluator.eval(stmt.clone())?;
+                }
+            }
             if let Some(r) = inner_evaluator.eval(stmt.clone())? {
                 result = Some(r);
             }
@@ -233,13 +254,18 @@ fn eval_func(
     for (param, arg) in zip(params, args) {
         env.bind(param, arg)?;
     }
+
     let mut evaluator = Evaluator::init_with_exist(Rc::new(RefCell::new(env)));
 
     let mut result: Option<Value> = None;
     for stmt in body {
+        // println!("stmt:\n{:?}", stmt);
         match stmt {
             Statement::Expr(_) => {
                 result = evaluator.eval(stmt.clone())?;
+                if let Some(value) = evaluator.ret_value {
+                    return Ok(value);
+                }
             }
             Statement::Return(_) => match evaluator.eval(stmt.clone())? {
                 Some(result) => return Ok(result),
@@ -249,6 +275,7 @@ fn eval_func(
                 evaluator.eval(stmt.clone())?;
             }
         }
+        // println!("env:\n{}", evaluator.env.borrow());
     }
     result.ok_or_else(|| "Function return value is None".to_string())
 }

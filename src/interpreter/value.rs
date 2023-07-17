@@ -16,7 +16,7 @@ macro_rules! get_value_typename {
     };
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Value {
     Unit,
     Int(i64),
