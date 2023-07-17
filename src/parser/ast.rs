@@ -83,7 +83,7 @@ impl Debug for Expr {
             }
             Expr::Call { func, args } => write!(
                 f,
-                "{:?}.call({})",
+                "{:?}{}",
                 func,
                 args.iter()
                     .map(|expr| format!("{:?}", expr))
@@ -147,8 +147,8 @@ impl Debug for Infix {
             Infix::Gt => write!(f, ">"),
             Infix::Lte => write!(f, "<="),
             Infix::Gte => write!(f, ">="),
-            Infix::Call => todo!(),
-            Infix::Index => todo!(),
+            Infix::Call => unreachable!(),
+            Infix::Index => unreachable!(),
         }
     }
 }
