@@ -64,13 +64,13 @@ let a = fib(5);
 Done.
 Env:
 a = 8
-fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib.call((n - 1)) + fib.call((n - 2)))] }; }
+fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib(n - 1) + fib(n - 2))] }; }
 ```
 
 ## Todolist
 
-1. minimum REPL
-  - [x] minimum amount of datatype: int, fn, bool, unit
+1. REPL
+  - [x] datatype: int, fn, bool, unit
     - [ ] float
     - [ ] string
   - [x] expressions:
