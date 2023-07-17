@@ -236,8 +236,17 @@ fn eval_func(
 
     let mut result: Option<Value> = None;
     for stmt in body {
-        if let Some(r) = evaluator.eval(stmt.clone())? {
-            result = Some(r);
+        match stmt {
+            Statement::Expr(_) => {
+                result = evaluator.eval(stmt.clone())?;
+            }
+            Statement::Return(_) => match evaluator.eval(stmt.clone())? {
+                Some(result) => return Ok(result),
+                None => return Err("Return statement without return value".to_string()),
+            },
+            _ => {
+                evaluator.eval(stmt.clone())?;
+            }
         }
     }
     result.ok_or_else(|| "Function return value is None".to_string())
