@@ -343,10 +343,8 @@ mod tests {
                 if a > b {a} else {b}
             }",
             vec![Value::Int(0), Value::Int(1)] => 1,
-            vec![Value::Int(1), Value::Int(2)] => 2,
-            vec![Value::Int(2), Value::Int(3)] => 3,
-            vec![Value::Int(3), Value::Int(4)] => 4,
-            vec![Value::Int(4), Value::Int(5)] => 5,
+            vec![Value::Int(76), Value::Int(3)] => 76,
+            vec![Value::Int(-2), Value::Int(-5)] => -2,
         );
     }
 }
