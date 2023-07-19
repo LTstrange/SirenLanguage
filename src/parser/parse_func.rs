@@ -345,7 +345,7 @@ mod test {
 
     #[test]
     fn call_test() {
-        test!("let c = add(a, b)", statement, "let c = add.call(a, b)");
+        test!("let c   = add(a  ,  b )", statement, "let c = add(a, b)");
     }
     #[test]
     fn boolean_test() {
