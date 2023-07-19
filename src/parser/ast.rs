@@ -83,7 +83,7 @@ impl Debug for Expr {
             }
             Expr::Call { func, args } => write!(
                 f,
-                "{:?}{}",
+                "{:?}({})",
                 func,
                 args.iter()
                     .map(|expr| format!("{:?}", expr))
@@ -94,10 +94,24 @@ impl Debug for Expr {
             Expr::If { cond, then, els } => match els {
                 Some(els_block) => write!(
                     f,
-                    "if {:?} {{ {:?} }} else {{ {:?} }}",
-                    cond, then, els_block
+                    "if {:?} {{ {}}} else {{ {}}}",
+                    cond,
+                    then.iter()
+                        .map(|stmt| format!("{:?}; ", stmt))
+                        .collect::<String>(),
+                    els_block
+                        .iter()
+                        .map(|stmt| format!("{:?}; ", stmt))
+                        .collect::<String>()
                 ),
-                None => write!(f, "if {:?} {{ {:?} }}", cond, then),
+                None => write!(
+                    f,
+                    "if {:?} {{ {}}}",
+                    cond,
+                    then.iter()
+                        .map(|stmt| format!("{:?}; ", stmt))
+                        .collect::<String>()
+                ),
             },
         }
     }

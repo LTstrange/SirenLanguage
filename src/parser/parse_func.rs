@@ -355,11 +355,11 @@ mod test {
 
     #[test]
     fn if_test() {
-        test!("if true { 123 }", if_expr, "if true { [return 123] }");
+        test!("if true { 123 }", if_expr, "if true { return 123; }");
         test!(
             "if true { 123 } else { 234}",
             if_expr,
-            "if true { [return 123] } else { [return 234] }"
+            "if true { return 123; } else { return 234; }"
         );
     }
 
