@@ -79,6 +79,8 @@ fib = fn (n) { let ans = 0; expr if (n <= 1) { [return 1] } else { [set ans = (f
 
 1. REPL
   - [x] datatype: int, fn, bool, unit
+    - [ ] tuple
+    - [ ] array
     - [ ] float
     - [ ] string
   - [x] expressions:
