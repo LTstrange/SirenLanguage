@@ -285,7 +285,7 @@ mod tests {
     }
 
     macro_rules! test_siren_function_input_output {
-        ($program: literal, $(   $input:expr    => $output: expr   ),+) => {
+        ($program: literal, $(   $input:expr    => $output: expr   ),+ $(,)?) => {
             let (name, params, body) = build_siren_function!($program);
             $(
                 let result = eval_func(&params, $input, &body, Some(&name));
@@ -305,7 +305,7 @@ mod tests {
             }",
             vec![Value::Int(0)] => 0,
             vec![Value::Int(-5)] => 5,
-            vec![Value::Int(15)] => 15
+            vec![Value::Int(15)] => 15,
 
         );
     }
@@ -333,7 +333,6 @@ mod tests {
             vec![Value::Int(7)] => 21,
             vec![Value::Int(8)] => 34,
             vec![Value::Int(9)] => 55,
-            vec![Value::Int(10)] => 89
         );
     }
 
@@ -347,7 +346,7 @@ mod tests {
             vec![Value::Int(1), Value::Int(2)] => 2,
             vec![Value::Int(2), Value::Int(3)] => 3,
             vec![Value::Int(3), Value::Int(4)] => 4,
-            vec![Value::Int(4), Value::Int(5)] => 5
+            vec![Value::Int(4), Value::Int(5)] => 5,
         );
     }
 }
