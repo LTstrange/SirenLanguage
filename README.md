@@ -91,6 +91,7 @@ fib = fn (n) { let ans = 0; expr if (n <= 1) { [return 1] } else { [set ans = (f
     - [ ] type annotations
     - [ ] type checking
   - [x] fn (function)
+    - [ ] closure
   - [x] if expression
   - [ ] for loop
   - [ ] basic struct and enum
