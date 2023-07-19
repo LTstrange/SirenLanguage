@@ -266,3 +266,73 @@ fn eval_func(
     }
     Ok(result)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! build_siren_function {
+        ($program: literal) => {{
+            let stmt: Statement = SirenParser::parse_line($program).unwrap();
+            match stmt {
+                Statement::Let {
+                    name,
+                    value: Expr::Function { params, body },
+                } => (name, params, body),
+                _ => unreachable!(),
+            }
+        }};
+    }
+
+    macro_rules! test_siren_function_input_output {
+        ($program: literal, $(($input: expr, $output: expr)),+) => {
+            let (name, params, body) = build_siren_function!($program);
+            $(
+                let result = eval_func(&params, vec![Value::Int($input)], &body, Some(&name));
+                match result {
+                    Ok(Value::Int(n)) => assert_eq!(n, $output),
+                    _ => unreachable!(),
+                }
+            )+
+        };
+    }
+
+    #[test]
+    fn test_abs() {
+        test_siren_function_input_output!(
+            "let abs = fn (x) {
+                if x > 0 {x} else { -x}
+            }",
+            (0, 0),
+            (-5, 5),
+            (15, 15)
+        );
+    }
+
+    #[test]
+    fn test_fib() {
+        // 1 1 2 3 5 8 13 21 34 55 89
+        test_siren_function_input_output!(
+            "let fib = fn (n) {
+                let ans = 0;
+                if n <= 1 {
+                    return 1;
+                } else {
+                    ans = fib(n - 1) + fib(n - 2);
+                };
+                ans
+            }",
+            (0, 1),
+            (1, 1),
+            (2, 2),
+            (3, 3),
+            (4, 5),
+            (5, 8),
+            (6, 13),
+            (7, 21),
+            (8, 34),
+            (9, 55),
+            (10, 89)
+        );
+    }
+}
