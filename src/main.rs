@@ -5,7 +5,7 @@ use std::io::{self, Read, Write};
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
     // Create a new running environment
-    let mut env = Evaluator::new();
+    let mut env = Evaluator::new(None);
 
     if args.len() == 1 {
         repl(&mut env);
@@ -36,10 +36,7 @@ fn repl(evaluator: &mut Evaluator) {
             "quit" | "q" => break,
             // run input on the environment
             input => match run(evaluator, input) {
-                Ok(output) => match output {
-                    Some(number) => println!("{}", number), // print the result
-                    None => continue, // print nothing because of let statement
-                },
+                Ok(output) => println!("{}", output), // print the result
                 Err(msg) => println!("{}", format!("Error: {}", msg).red()),
             },
         }
@@ -52,8 +49,8 @@ fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
         Ok(mut file) => {
             let mut content = String::new();
             file.read_to_string(&mut content).unwrap();
-            // println!("Content:");
-            // println!("{}", content);
+            println!("Content:");
+            println!("{}", content);
             match run_file(evaluator, content) {
                 Ok(()) => println!("Done."),
                 Err(msg) => {
@@ -62,7 +59,7 @@ fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
             }
 
             println!("Env:"); // print variables in the environment
-            println!("{}", evaluator.env.borrow());
+            println!("{}", evaluator.env);
         }
         Err(msg) => {
             // not such file
