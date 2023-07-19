@@ -1,6 +1,6 @@
 mod value;
 
-use std::{cell::RefCell, collections::HashMap, fmt::Display, iter::zip, rc::Rc};
+use std::{collections::HashMap, fmt::Display, iter::zip};
 
 use crate::parser::*;
 pub use value::Value;
@@ -19,112 +19,133 @@ macro_rules! get_value {
     };
 }
 
-#[derive(Default)]
 pub struct Environment {
-    parent: Option<Rc<RefCell<Environment>>>,
-    variables: HashMap<String, Value>,
+    env_stack: Vec<HashMap<String, Value>>,
 }
 
 impl Display for Environment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (key, value) in &self.variables {
-            writeln!(f, "{} = {}", key, value)?;
+        for (i, stack) in self.env_stack.iter().enumerate() {
+            writeln!(f, "=========================")?;
+            writeln!(f, "Stack {}:", i)?;
+            for (key, value) in stack {
+                writeln!(f, "{} = {}", key, value)?;
+            }
         }
+        writeln!(f, "=========================")?;
+
         Ok(())
     }
 }
 
-impl Environment {
-    // bind variable to the variable table
-    fn bind(&mut self, name: &str, value: Value) -> Result<(), &str> {
-        if self.variables.contains_key(name) {
-            return Err("Variable already exists");
+impl Default for Environment {
+    fn default() -> Self {
+        Self {
+            env_stack: vec![HashMap::new()],
         }
-        self.variables.insert(name.to_string(), value);
+    }
+}
+
+impl Environment {
+    // push a new environment for block_stmt evaluation.
+    fn push(&mut self) {
+        self.env_stack.push(HashMap::new());
+    }
+
+    // pop a environment when exit block_stmt evaluation.
+    fn pop(&mut self) {
+        self.env_stack.pop();
+    }
+
+    // bind variable to the variable table
+    fn bind(&mut self, name: &str, value: Value) -> Result<(), String> {
+        // binding only affects the top/current environment
+        let last = self.env_stack.last_mut().unwrap();
+        // check if the variable is already bound
+        if last.contains_key(name) {
+            return Err("Variable already exists".to_string());
+        }
+        last.insert(name.to_string(), value);
         Ok(())
     }
 
     // set(update) variable in the variable table
     fn set(&mut self, name: &str, value: Value) -> Result<(), String> {
-        match self.variables.get_mut(name) {
-            Some(origin) => {
-                *origin = value;
-                Ok(())
+        // loop through all environments to find the variable. (from top to bottom)
+        for env in self.env_stack.iter_mut().rev() {
+            if env.contains_key(name) {
+                env.insert(name.to_string(), value);
+                return Ok(());
             }
-            None => match &mut self.parent {
-                Some(parent) => parent.borrow_mut().set(name, value),
-                None => Err(format!("no such variable: {}", name)),
-            },
         }
+        Err(format!("Variable {} not found", name))
     }
-    fn get(&self, name: &str) -> Option<Value> {
-        match self.variables.get(name).cloned() {
-            Some(value) => Some(value),
-            None => match &self.parent {
-                Some(parent) => parent.borrow().get(name),
-                None => None,
-            },
+
+    // get variable from the variable table
+    // todo : the return type should be a reference, but I'll do it later
+    fn get(&self, name: &str) -> Result<Value, String> {
+        // loop through all environments to find the variable. (from top to bottom)
+        for env in self.env_stack.iter().rev() {
+            if env.contains_key(name) {
+                return Ok(env[name].clone());
+            }
         }
+        Err(format!("Variable {} not found", name))
     }
 }
 
-#[derive(Default)]
 pub struct Evaluator {
     // todo : use stack-like evaluator to solve "return in block" problem
     // Every function will only have one evaluator,
     // so it might be better to integrate eval_func within evaluator, but in more organic way.
     // and that might be a better way to solve "return in block" problem.
-    pub env: Rc<RefCell<Environment>>,
+    pub env: Environment,
     ret_value: Option<Value>,
 }
 
 impl Evaluator {
-    pub fn new() -> Self {
-        Evaluator::default()
-    }
-
-    fn init_with_exist(env: Rc<RefCell<Environment>>) -> Self {
-        Evaluator {
+    pub fn new(self_func: Option<(&str, Vec<String>, Vec<Statement>)>) -> Self {
+        let mut env = Environment::default();
+        if let Some((self_func, params, body)) = self_func {
+            env.bind(self_func, Value::Fn { params, body }).unwrap();
+        }
+        Self {
             env,
-            ..Default::default()
+            ret_value: None,
         }
     }
 
-    fn init_with_parent(parent: Rc<RefCell<Environment>>) -> Self {
-        Self {
-            env: Rc::new(RefCell::new(Environment {
-                parent: Some(parent),
-                ..Default::default()
-            })),
-            ..Default::default()
+    fn update_with_args(&mut self, params: Vec<&str>, args: Vec<Value>) {
+        for (param, value) in zip(params, args) {
+            self.env.bind(param, value).unwrap();
         }
     }
 
     // evaluate oneline code
-    pub fn eval(&mut self, ast: Statement) -> Result<Option<Value>, String> {
+    pub fn eval(&mut self, ast: &Statement) -> Result<Value, String> {
         match ast {
-            Statement::Let { name, ref value } => {
+            Statement::Let { name, value } => {
                 let value = self.eval_expr(value)?;
-                self.env.borrow_mut().bind(&name, value)?;
-                Ok(None)
+                self.env.bind(name, value)?;
+                Ok(Value::Unit)
             }
-            Statement::Expr(expr) => Ok(Some(self.eval_expr(&expr)?)),
+            Statement::Expr(expr) => self.eval_expr(expr),
             Statement::Set { name, value } => {
-                let value = self.eval_expr(&value)?;
-                self.env.borrow_mut().set(&name, value)?;
-                Ok(None)
+                let value = self.eval_expr(value)?;
+                self.env.set(name, value)?;
+                Ok(Value::Unit)
             }
-            Statement::Return(ret) => Ok(Some(self.eval_expr(&ret)?)),
+            Statement::Return(ret) => {
+                self.ret_value = Some(self.eval_expr(ret)?);
+                Ok(Value::Unit)
+            }
         }
     }
 
     // evaluate expression
     fn eval_expr(&mut self, expr: &Expr) -> Result<Value, String> {
         match expr {
-            Expr::Ident(ident) => match self.env.borrow_mut().get(ident) {
-                Some(n) => Ok(n),
-                None => Err(format!("no such variable: {}", ident)),
-            },
+            Expr::Ident(ident) => self.env.get(ident),
             Expr::Literal(literal) => match literal {
                 Literal::Int(n) => Ok(Value::Int(*n)),
                 Literal::Bool(b) => Ok(Value::Bool(*b)),
@@ -162,11 +183,7 @@ impl Evaluator {
                 match func.as_ref() {
                     // call on func identity
                     Expr::Ident(func_name) => {
-                        let func = self
-                            .env
-                            .borrow()
-                            .get(func_name)
-                            .ok_or(format!("no such function: {}", func_name))?;
+                        let func = self.env.get(func_name)?;
                         let (params, body) = match func {
                             Value::Fn { params, body } => Ok((params, body)),
                             _ => Err("this is not a function".to_string()),
@@ -203,32 +220,16 @@ impl Evaluator {
     }
 
     fn eval_block(&mut self, block: &BlockStmt) -> Result<Value, String> {
-        let mut inner_evaluator = Self::init_with_parent(self.env.clone());
-        let mut result: Option<Value> = None;
+        self.env.push();
+        let mut result = Value::Unit;
         for stmt in block {
-            match stmt {
-                Statement::Expr(_) => {
-                    result = inner_evaluator.eval(stmt.clone())?;
-                }
-                Statement::Return(_) => match inner_evaluator.eval(stmt.clone())? {
-                    Some(value) => {
-                        self.ret_value = Some(value.clone());
-                        return Ok(value);
-                    }
-                    None => return Err("Return statement without return value".to_string()),
-                },
-                _ => {
-                    inner_evaluator.eval(stmt.clone())?;
-                }
-            }
-            if let Some(r) = inner_evaluator.eval(stmt.clone())? {
-                result = Some(r);
+            result = self.eval(stmt)?;
+            if let Some(ret) = self.ret_value.clone() {
+                return Ok(ret);
             }
         }
-        match result {
-            Some(value) => Ok(value),
-            None => Ok(Value::Unit),
-        }
+        self.env.pop();
+        Ok(result)
     }
 }
 
@@ -238,48 +239,33 @@ fn eval_func(
     body: &Vec<Statement>,
     self_func: Option<&str>,
 ) -> Result<Value, String> {
-    let mut env = Environment::default();
+    // check whether the args_len matches the params_len
     if args.len() != params.len() {
         return Err(format!(
-            "expect {} parameters, found {}",
+            "expect {} parameters, found {} args.",
             params.len(),
             args.len()
         ));
     }
+
+    let mut evaluator = Evaluator::new(None);
+    // bind self recursion
     if let Some(name) = self_func {
-        env.bind(
-            name,
-            Value::Fn {
-                params: params.to_vec(),
-                body: body.to_vec(),
-            },
-        )?;
-    }
-    for (param, arg) in zip(params, args) {
-        env.bind(param, arg)?;
+        evaluator = Evaluator::new(Some((name, params.to_owned(), body.to_owned())));
     }
 
-    let mut evaluator = Evaluator::init_with_exist(Rc::new(RefCell::new(env)));
+    // bind parameters and arguments to the environment
+    evaluator.update_with_args(
+        params.iter().map(|s| s.as_str()).collect::<Vec<&str>>(),
+        args,
+    );
 
-    let mut result: Option<Value> = None;
+    let mut result = Value::Unit;
     for stmt in body {
-        // println!("stmt:\n{:?}", stmt);
-        match stmt {
-            Statement::Expr(_) => {
-                result = evaluator.eval(stmt.clone())?;
-                if let Some(value) = evaluator.ret_value {
-                    return Ok(value);
-                }
-            }
-            Statement::Return(_) => match evaluator.eval(stmt.clone())? {
-                Some(result) => return Ok(result),
-                None => return Err("Return statement without return value".to_string()),
-            },
-            _ => {
-                evaluator.eval(stmt.clone())?;
-            }
+        result = evaluator.eval(stmt)?;
+        if let Some(ret) = evaluator.ret_value {
+            return Ok(ret);
         }
-        // println!("env:\n{}", evaluator.env.borrow());
     }
-    result.ok_or_else(|| "Function return value is None".to_string())
+    Ok(result)
 }
