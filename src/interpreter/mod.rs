@@ -285,10 +285,10 @@ mod tests {
     }
 
     macro_rules! test_siren_function_input_output {
-        ($program: literal, $(($input: expr, $output: expr)),+) => {
+        ($program: literal, $(   $input:expr    => $output: expr   ),+) => {
             let (name, params, body) = build_siren_function!($program);
             $(
-                let result = eval_func(&params, vec![Value::Int($input)], &body, Some(&name));
+                let result = eval_func(&params, $input, &body, Some(&name));
                 match result {
                     Ok(Value::Int(n)) => assert_eq!(n, $output),
                     _ => unreachable!(),
@@ -303,9 +303,10 @@ mod tests {
             "let abs = fn (x) {
                 if x > 0 {x} else { -x}
             }",
-            (0, 0),
-            (-5, 5),
-            (15, 15)
+            vec![Value::Int(0)] => 0,
+            vec![Value::Int(-5)] => 5,
+            vec![Value::Int(15)] => 15
+
         );
     }
 
@@ -322,17 +323,31 @@ mod tests {
                 };
                 ans
             }",
-            (0, 1),
-            (1, 1),
-            (2, 2),
-            (3, 3),
-            (4, 5),
-            (5, 8),
-            (6, 13),
-            (7, 21),
-            (8, 34),
-            (9, 55),
-            (10, 89)
+            vec![Value::Int(0)] => 1,
+            vec![Value::Int(1)] => 1,
+            vec![Value::Int(2)] => 2,
+            vec![Value::Int(3)] => 3,
+            vec![Value::Int(4)] => 5,
+            vec![Value::Int(5)] => 8,
+            vec![Value::Int(6)] => 13,
+            vec![Value::Int(7)] => 21,
+            vec![Value::Int(8)] => 34,
+            vec![Value::Int(9)] => 55,
+            vec![Value::Int(10)] => 89
+        );
+    }
+
+    #[test]
+    fn test_branch() {
+        test_siren_function_input_output!(
+            "let max = fn (a, b) {
+                if a > b {a} else {b}
+            }",
+            vec![Value::Int(0), Value::Int(1)] => 1,
+            vec![Value::Int(1), Value::Int(2)] => 2,
+            vec![Value::Int(2), Value::Int(3)] => 3,
+            vec![Value::Int(3), Value::Int(4)] => 4,
+            vec![Value::Int(4), Value::Int(5)] => 5
         );
     }
 }
