@@ -41,30 +41,38 @@ true
 File interpret: `cargo r examples/fib.siren`:
 ```
 let fib = fn (n) {
+    let ans = 0;
     if n <= 1 {
-        1
+        return 1;
     } else {
-        fib(n - 1) + fib(n - 2)
-    }
+        ans = fib(n - 1) + fib(n - 2);
+    };
+    ans
 };
 
 let a = fib(5);
 ```
 output:
 ```
+Content:
 let fib = fn (n) {
+    let ans = 0;
     if n <= 1 {
-        1
+        return 1;
     } else {
-        fib(n - 1) + fib(n - 2)
-    }
+        ans = fib(n - 1) + fib(n - 2);
+    };
+    ans
 };
 
 let a = fib(5);
 Done.
 Env:
+=========================
+Stack 0:
 a = 8
-fib = fn (n) { return if (n <= 1) { [return 1] } else { [return (fib(n - 1) + fib(n - 2))] }; }
+fib = fn (n) { let ans = 0; expr if (n <= 1) { [return 1] } else { [set ans = (fib(n - 1) + fib(n - 2))] }; return ans; }
+=========================
 ```
 
 ## Todolist
