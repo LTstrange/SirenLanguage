@@ -46,7 +46,7 @@ pub enum Expr {
     UnExpr(Prefix, Box<Expr>),
     BinExpr(Box<Expr>, Infix, Box<Expr>),
     Function {
-        params: Vec<String>,
+        typed_params: Vec<(String, String)>,
         body: BlockStmt,
     },
     Call {
@@ -71,11 +71,18 @@ impl Debug for Expr {
             Expr::Literal(l) => write!(f, "{:?}", l),
             Expr::UnExpr(op, e) => write!(f, "({:?}{:?})", op, e),
             Expr::BinExpr(l, op, r) => write!(f, "({:?} {:?} {:?})", l, op, r),
-            Expr::Function { params, body } => {
+            Expr::Function {
+                typed_params: params,
+                body,
+            } => {
                 write!(
                     f,
                     "fn({}) {{ {}}}",
-                    params.join(", "),
+                    params
+                        .iter()
+                        .map(|(p, t)| format!("{}: {}", p, t))
+                        .collect::<Vec<String>>()
+                        .join(", "),
                     body.iter()
                         .map(|stmt| format!("{:?}; ", stmt))
                         .collect::<String>()
