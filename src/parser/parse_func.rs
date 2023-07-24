@@ -85,6 +85,17 @@ fn identity(input: Tokens) -> IResult<Tokens, Expr> {
     }
 }
 
+fn type_annotation(input: Tokens) -> IResult<Tokens, String> {
+    let (i1, t1) = take(1usize)(input)?;
+    if t1.tok.is_empty() {
+        Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+    } else {
+        match &t1.tok[0] {
+            Token::TypeParam(ty) => Ok((i1, ty.to_owned())),
+            _ => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
+        }
+    }
+}
 fn prefix_expr(input: Tokens) -> IResult<Tokens, Expr> {
     let (input, prefix) = alt((sub_tag, not_tag))(input)?;
     if prefix.tok.is_empty() {
@@ -103,11 +114,15 @@ fn parent_expr(input: Tokens) -> IResult<Tokens, Expr> {
     delimited(lparen_tag, expr, rparen_tag)(input)
 }
 
-fn parse_params(input: Tokens) -> IResult<Tokens, Vec<Expr>> {
-    map(
-        pair(identity, many0(preceded(comma_tag, identity))),
-        |(p, ps)| [&vec![p][..], &ps[..]].concat(),
-    )(input)
+fn parse_params(mut input: Tokens) -> IResult<Tokens, Vec<(Expr, String)>> {
+    let mut id_tp = tuple((identity, colon_tag, type_annotation));
+    let mut result = vec![];
+    while let Ok((i1, (id, _, tp))) = id_tp(input) {
+        result.push((id, tp));
+        let (i1, _) = opt(comma_tag)(i1)?;
+        input = i1;
+    }
+    Ok((input, result))
 }
 
 fn fn_expr(input: Tokens) -> IResult<Tokens, Expr> {
@@ -115,19 +130,27 @@ fn fn_expr(input: Tokens) -> IResult<Tokens, Expr> {
         tuple((
             fn_tag,
             lparen_tag,
-            alt((parse_params, empty)),
+            opt(parse_params),
             rparen_tag,
             block_stmt,
         )),
         |(_, _, p, _, b)| {
-            let params = p
-                .iter()
-                .map(|e| match e {
-                    Expr::Ident(name) => name.to_string(),
-                    _ => unreachable!(),
-                })
-                .collect();
-            Expr::Function { params, body: b }
+            let params;
+            if let Some(p) = p {
+                params = p
+                    .into_iter()
+                    .map(|(e, t)| match e {
+                        Expr::Ident(s) => (s, t),
+                        _ => unreachable!(),
+                    })
+                    .collect();
+            } else {
+                params = vec![];
+            }
+            Expr::Function {
+                typed_params: params,
+                body: b,
+            }
         },
     )(input)
 }
@@ -314,9 +337,9 @@ mod test {
     #[test]
     fn function_test() {
         test!(
-            "fn(x, y) { x + y;  x - y}",
+            "fn(x : int, y : int) { x + y;  x - y}",
             fn_expr,
-            "fn(x, y) { expr (x + y); return (x - y); }"
+            "fn(x: int, y: int) { expr (x + y); return (x - y); }"
         );
     }
 
@@ -332,9 +355,9 @@ mod test {
         test!("let abc =123 + 254  ", statement, "let abc = (123 + 254)");
         test!("abc =123 + 254  ", statement, "set abc = (123 + 254)");
         test!(
-            "let abc = fn (a, b) {  a + b;}",
+            "let abc = fn (a: int, b: int) {  a + b;}",
             statement,
-            "let abc = fn(a, b) { expr (a + b); }"
+            "let abc = fn(a: int, b: int) { expr (a + b); }"
         );
     }
 
