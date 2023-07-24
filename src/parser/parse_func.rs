@@ -34,7 +34,7 @@ tag_token!(rbracket_tag, Token::RBracket);
 tag_token!(lbrace_tag, Token::LBrace);
 tag_token!(rbrace_tag, Token::RBrace);
 tag_token!(comma_tag, Token::Comma);
-// tag_token!(colon_tag, Token::Colon);
+tag_token!(colon_tag, Token::Colon);
 tag_token!(sub_tag, Token::Sub);
 tag_token!(not_tag, Token::Not);
 tag_token!(if_tag, Token::If);
