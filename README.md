@@ -91,6 +91,7 @@ fib = fn (n) { let ans = 0; expr if (n <= 1) { [return 1] } else { [set ans = (f
 2. interpreter for file
   - [x] variable type system
     - [ ] type annotations
+      - [ ] type parser
     - [ ] type checking
   - [x] fn (function)
     - [ ] closure
