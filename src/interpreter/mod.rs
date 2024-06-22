@@ -147,8 +147,8 @@ impl Evaluator {
                 Literal::Int(n) => Ok(Value::Int(*n)),
                 Literal::Bool(b) => Ok(Value::Bool(*b)),
             },
-            Expr::Function { params, body } => Ok(Value::Fn {
-                params: params.to_owned(),
+            Expr::Function { body, typed_params } => Ok(Value::Fn {
+                params: typed_params.iter().map(|p| p.1.to_string()).collect(),
                 body: body.to_owned(),
             }),
             Expr::UnExpr(op, ref n) => {
@@ -189,7 +189,15 @@ impl Evaluator {
                         eval_func(&params, args, &body, Some(func_name))
                     }
                     // instant call on anonymous function
-                    Expr::Function { params, body } => eval_func(params, args, body, None),
+                    Expr::Function { typed_params, body } => eval_func(
+                        &typed_params
+                            .iter()
+                            .map(|p| p.1.to_owned())
+                            .collect::<Vec<String>>(),
+                        args,
+                        body,
+                        None,
+                    ),
                     _ => Err("Calling non-function".to_string()),
                 }
             }
@@ -277,8 +285,8 @@ mod tests {
             match stmt {
                 Statement::Let {
                     name,
-                    value: Expr::Function { params, body },
-                } => (name, params, body),
+                    value: Expr::Function { typed_params, body },
+                } => (name, typed_params, body),
                 _ => unreachable!(),
             }
         }};
@@ -288,7 +296,9 @@ mod tests {
         ($program: literal, $(   $input:expr    => $output: expr   ),+ $(,)?) => {
             let (name, params, body) = build_siren_function!($program);
             $(
-                let result = eval_func(&params, $input, &body, Some(&name));
+                let result = eval_func(&params.iter()
+                .map(|p| p.1.to_owned())
+                .collect::<Vec<String>>(), $input, &body, Some(&name));
                 match result {
                     Ok(Value::Int(n)) => assert_eq!(n, $output),
                     _ => unreachable!(),

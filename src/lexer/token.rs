@@ -13,10 +13,6 @@ pub enum Token {
     #[regex(r"true|false", |lex| lex.slice().parse().ok())]
     Bool(bool),
 
-    // type parameters
-    #[regex(r"int|bool", |lex| String::from(lex.slice()))]
-    TypeParam(String),
-
     // reserved keywords
     #[token("let")]
     Let,
@@ -148,7 +144,7 @@ mod test {
         assert_eq!(Some(Ok(Token::Let)), lex.next());
         assert_eq!(Some(Ok(Token::Ident("abc".to_string()))), lex.next());
         assert_eq!(Some(Ok(Token::Colon)), lex.next());
-        assert_eq!(Some(Ok(Token::TypeParam("int".to_string()))), lex.next());
+        assert_eq!(Some(Ok(Token::Ident("int".to_string()))), lex.next());
         assert_eq!(Some(Ok(Token::Assign)), lex.next());
         assert_eq!(Some(Ok(Token::Int(123))), lex.next());
         assert_eq!(Some(Ok(Token::Semicolon)), lex.next());
@@ -157,7 +153,7 @@ mod test {
         assert_eq!(Some(Ok(Token::Let)), lex.next());
         assert_eq!(Some(Ok(Token::Ident("abc".to_string()))), lex.next());
         assert_eq!(Some(Ok(Token::Colon)), lex.next());
-        assert_eq!(Some(Ok(Token::TypeParam("bool".to_string()))), lex.next());
+        assert_eq!(Some(Ok(Token::Ident("bool".to_string()))), lex.next());
         assert_eq!(Some(Ok(Token::Assign)), lex.next());
         assert_eq!(Some(Ok(Token::Bool(true))), lex.next());
         assert_eq!(Some(Ok(Token::Semicolon)), lex.next());
