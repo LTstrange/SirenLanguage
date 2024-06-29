@@ -1,8 +1,8 @@
 # Siren Language
 
-I'm trying to make a simple programming language called Siren Language.
+This a simple programming language called Siren Language.
 
-This language will become a graphic and text programming language.
+It's trying to solve the parallel (even heterogeneous) computing more gracefully with the power of high-order type system.
 
 ## features
 - REPL
