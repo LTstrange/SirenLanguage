@@ -10,7 +10,6 @@ pub fn build_pratt_parser() -> PrattParser<Rule> {
         .op(Op::infix(Rule::add, Assoc::Left) | Op::infix(Rule::sub, Assoc::Left))
         .op(Op::infix(Rule::mul, Assoc::Left) | Op::infix(Rule::div, Assoc::Left))
         .op(Op::prefix(Rule::neg))
-        .op(Op::postfix(Rule::call))
 }
 
 pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr<'a> {
@@ -19,7 +18,16 @@ pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr
             Rule::ident => Expr::Ident(primary.as_str()),
             Rule::number => Expr::Literal(Literal::Number(primary.as_str().parse().unwrap())),
             Rule::boolean => Expr::Literal(Literal::Boolean(primary.as_str().parse().unwrap())),
-            Rule::expr => pratt_parse(primary.into_inner(), pratt),
+            Rule::fn_call => {
+                println!("primary: {}", primary);
+                let mut pairs = primary.into_inner();
+                println!("pairs: {}", pairs);
+                let ident = pairs.next().unwrap();
+                let func = Box::new(Expr::Ident(ident.as_str()));
+                let args = pairs.map(|p| pratt_parse(p.into_inner(), pratt)).collect();
+                Expr::Call { func, args }
+            }
+            Rule::expr => pratt_parse(primary.into_inner(), pratt), // "(" ~ expr ~ ")"
             p => unreachable!("get unexpected primary in pratt: {p:?}"),
         })
         .map_infix(|lhs, op, rhs| match op.as_rule() {
@@ -32,16 +40,6 @@ pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr
         .map_prefix(|op, rhs| match op.as_rule() {
             Rule::neg => Expr::UnaryOp(Prefix::Neg, Box::new(rhs)),
             _ => unreachable!("get unexpected prefix operator in pratt: {op:?}"),
-        })
-        .map_postfix(|lhs, op| match op.as_rule() {
-            Rule::call => Expr::Call {
-                func: Box::new(lhs),
-                args: op
-                    .into_inner()
-                    .map(|arg| pratt_parse(arg.into_inner(), &pratt))
-                    .collect(),
-            },
-            _ => unreachable!("get unexpected postfix operator in pratt: {op:?}"),
         })
         .parse(expr)
 }
