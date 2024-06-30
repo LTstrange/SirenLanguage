@@ -42,19 +42,28 @@ pub fn parse_line(input: &str) -> Result<Option<Item>, Error<Rule>> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_calculate_expression() {
-        let input = r#"let a = 123 - 12 / 4; let b = (-a + 42) / 2;"#;
-
-        let p = parse_file(input).unwrap();
-        println!("{:#?}", p);
+    fn test_input(input: &str) {
+        match parse_file(input) {
+            Ok(p) => println!("{:#?}", p),
+            Err(e) => panic!("Error: {}", e),
+        }
     }
 
     #[test]
-    fn test_parse() {
-        let input = r#"let main = sum(a, 13);"#;
+    fn test_calculate_expression() {
+        let input = r#"let a = 123 - 12 / 4; let b = (-a + 42) / 2;"#;
+        test_input(input);
+    }
 
-        let p = parse_file(input).unwrap();
-        println!("{:#?}", p);
+    #[test]
+    fn test_call() {
+        let input = r#"let main = sum(a, 13);"#;
+        test_input(input);
+    }
+
+    #[test]
+    fn test_func_build() {
+        let input = r#"let main = fn(a, b) {42};"#;
+        test_input(input);
     }
 }
