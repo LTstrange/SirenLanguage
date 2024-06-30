@@ -8,7 +8,7 @@ pub enum Item<'a> {
 
 #[derive(Debug)]
 pub enum Expr<'a> {
-    Ident(&'a str),
+    Id(Ident<'a>),
     Literal(Literal),
     BinOp(Box<Expr<'a>>, Infix, Box<Expr<'a>>),
     UnaryOp(Prefix, Box<Expr<'a>>),
@@ -37,6 +37,9 @@ pub enum Infix {
 pub enum Prefix {
     Neg,
 }
+
+#[derive(Debug)]
+pub struct Ident<'a>(pub &'a str);
 
 #[derive(Debug)]
 pub struct Function<'a> {
