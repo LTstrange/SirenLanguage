@@ -1,4 +1,5 @@
 mod ast;
+mod function_parser;
 mod pratt_parser;
 
 use ast::*;

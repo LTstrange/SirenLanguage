@@ -1,5 +1,6 @@
 use super::*;
 
+use function_parser::parse_function_def;
 use pest::{
     iterators::Pairs,
     pratt_parser::{Assoc, Op, PrattParser},
@@ -19,52 +20,13 @@ pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr
             Rule::number => Expr::Literal(Literal::Number(primary.as_str().parse().unwrap())),
             Rule::boolean => Expr::Literal(Literal::Boolean(primary.as_str().parse().unwrap())),
             Rule::fn_call => {
-                println!("primary: {}", primary);
-                let mut pairs = primary.into_inner();
-                println!("pairs: {}", pairs);
-                let ident = pairs.next().unwrap();
+                let mut pairs = primary.into_inner(); //  ident ~ [ expr ]
+                let ident = pairs.next().unwrap(); // ident
                 let func = Box::new(Expr::Id(Ident(ident.as_str())));
-                let args = pairs.map(|p| pratt_parse(p.into_inner(), pratt)).collect();
+                let args = pairs.map(|p| pratt_parse(p.into_inner(), pratt)).collect(); // [ expr ]
                 Expr::Call { func, args }
             }
-            Rule::r#fn => {
-                let mut pairs = primary.into_inner();
-                let params = pairs
-                    .next()
-                    .unwrap()
-                    .into_inner()
-                    .map(|arg| arg.as_str())
-                    .collect();
-
-                let body = pairs
-                    .next()
-                    .unwrap()
-                    .into_inner()
-                    .map(|line| match line.as_rule() {
-                        Rule::let_stmt => {
-                            let mut pairs = line.into_inner(); // ident ~ expr
-                            let ident = pairs.next().unwrap().as_str();
-                            let expr = pratt_parse(pairs.next().unwrap().into_inner(), pratt);
-                            Statement::Let(Ident(ident), Box::new(expr))
-                        }
-                        Rule::set_stmt => {
-                            let mut pairs = line.into_inner(); // ident ~ expr
-                            let ident = pairs.next().unwrap().as_str();
-                            let expr = pratt_parse(pairs.next().unwrap().into_inner(), pratt);
-                            Statement::Set(Ident(ident), Box::new(expr))
-                        }
-                        Rule::ret_stmt => Statement::Return(Box::new(pratt_parse(
-                            line.into_inner().next().unwrap().into_inner(),
-                            pratt,
-                        ))),
-                        Rule::expr => {
-                            Statement::Return(Box::new(pratt_parse(line.into_inner(), pratt)))
-                        }
-                        p => unreachable!("get unexpected statement in pratt: {p:?}"),
-                    })
-                    .collect();
-                Expr::Fn(Function { params, body })
-            }
+            Rule::r#fn => Expr::Fn(parse_function_def(primary.into_inner(), pratt)),
             Rule::expr => pratt_parse(primary.into_inner(), pratt), // "(" ~ expr ~ ")"
             p => unreachable!("get unexpected primary in pratt: {p:?}"),
         })
