@@ -1,6 +1,4 @@
-use pest::iterators::Pairs;
-
-use super::*;
+use super::prelude::*;
 
 pub fn parse_function_def<'a>(
     mut pairs: Pairs<'a, Rule>,

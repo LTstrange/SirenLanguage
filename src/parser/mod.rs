@@ -1,29 +1,29 @@
 mod ast;
 mod function_parser;
+mod item_parser;
 mod pratt_parser;
 
-use ast::*;
-use pratt_parser::*;
+mod prelude {
+    pub use super::ast::*;
+    pub use super::function_parser::*;
+    pub use super::item_parser::*;
+    pub use super::pratt_parser::*;
+    pub use super::Rule;
 
-use pest::{error::Error, iterators::Pair, pratt_parser::PrattParser, Parser};
-use pest_derive::Parser;
+    pub use pest::{
+        error::Error,
+        iterators::{Pair, Pairs},
+        pratt_parser::{Assoc, Op, PrattParser},
+        Parser,
+    };
+    pub use pest_derive::Parser;
+}
+
+use prelude::*;
 
 #[derive(Parser)]
 #[grammar = "parser/grammar.pest"]
 struct SirenParser;
-
-fn parse_item<'a>(item: Pair<'a, Rule>, pratt: &PrattParser<Rule>) -> Option<Item<'a>> {
-    match item.as_rule() {
-        Rule::let_stmt => {
-            let mut pairs = item.into_inner();
-            let ident = pairs.next().unwrap().as_str();
-            let expr = pratt_parse(pairs.next().unwrap().into_inner(), pratt);
-            Some(Item::DefItem { ident, expr })
-        }
-        Rule::EOI => None,
-        _ => unreachable!(),
-    }
-}
 
 pub fn parse_file(input: &str) -> Result<Program, Error<Rule>> {
     let pratt = build_pratt_parser();
