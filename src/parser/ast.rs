@@ -14,7 +14,7 @@ pub enum Expr<'a> {
     UnaryOp(Prefix, Box<Expr<'a>>),
     Fn(Function<'a>),
     Call {
-        func: Box<Function<'a>>,
+        func: Box<Expr<'a>>,
         args: Vec<Expr<'a>>,
     },
 }
