@@ -2,7 +2,7 @@
 
 This a simple programming language called Siren Language.
 
-It's trying to solve the parallel (even heterogeneous) computing more gracefully with the power of high-order type system.
+It aims to gracefully address parallel and heterogeneous computing challenges using the power of a high-order type system.
 
 ## features
 - REPL
