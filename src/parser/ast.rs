@@ -43,6 +43,13 @@ pub struct Ident<'a>(pub &'a str);
 
 #[derive(Debug)]
 pub struct Function<'a> {
-    params: Vec<String>,
-    body: Vec<Item<'a>>, // todo: change to Statements
+    pub params: Vec<&'a str>,
+    pub body: Vec<Statement<'a>>, // todo: change to Statements
+}
+
+#[derive(Debug)]
+pub enum Statement<'a> {
+    Let(Ident<'a>, Box<Expr<'a>>),
+    Set(Ident<'a>, Box<Expr<'a>>),
+    Return(Box<Expr<'a>>),
 }
