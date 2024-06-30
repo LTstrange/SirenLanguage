@@ -11,6 +11,7 @@ pub enum Expr<'a> {
     Ident(&'a str),
     Literal(Literal),
     BinOp(Box<Expr<'a>>, Infix, Box<Expr<'a>>),
+    UnaryOp(Prefix, Box<Expr<'a>>),
     Fn(Function<'a>),
     Call {
         func: Box<Function<'a>>,
@@ -30,6 +31,11 @@ pub enum Infix {
     Sub,
     Mul,
     Div,
+}
+
+#[derive(Debug)]
+pub enum Prefix {
+    Neg,
 }
 
 #[derive(Debug)]

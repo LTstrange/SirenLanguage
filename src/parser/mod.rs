@@ -36,6 +36,10 @@ fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr<'a>
             Rule::div => Expr::BinOp(Box::new(lhs), Infix::Div, Box::new(rhs)),
             _ => unreachable!("get unexpected infix operator in pratt: {op:?}"),
         })
+        .map_prefix(|op, rhs| match op.as_rule() {
+            Rule::neg => Expr::UnaryOp(Prefix::Neg, Box::new(rhs)),
+            _ => unreachable!("get unexpected prefix operator in pratt: {op:?}"),
+        })
         .parse(expr)
 }
 
