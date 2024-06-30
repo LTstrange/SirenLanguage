@@ -51,12 +51,16 @@ fn repl() {
 }
 
 fn file_interpreter(path: PathBuf) {
-    match fs::read_to_string(path) {
+    match fs::read_to_string(path.clone()) {
         Ok(content) => {
             if let Err(msg) = run_file(&content) {
                 println!("{}", format!("Error: {}", msg).red());
             }
         }
-        Err(e) => println!("No such file: {}", e.to_string().red()),
+        Err(e) => println!(
+            "{}\n{}",
+            e.to_string().red(),
+            format!("Path: {:?}", path).red()
+        ),
     }
 }

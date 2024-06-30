@@ -1,4 +1,4 @@
-mod interpreter;
+// mod interpreter;
 mod parser;
 
 pub fn run_file(input: &str) -> Result<(), String> {
