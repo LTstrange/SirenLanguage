@@ -7,7 +7,7 @@ let_stmt  =  { "let" ~ ident ~ "=" ~ expr ~ ";" }
 set_stmt  =  { ident ~ "=" ~ expr ~ ";" }
 ret_stmt  =  { "return" ~ expr ~ ";" }
 
-ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+ident = @{ !KEYWORDS ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
 // pratt parser
 expr    =  { prefix? ~ primary ~ postfix? ~ (infix ~ prefix? ~ primary ~ postfix?)* }
@@ -21,7 +21,7 @@ neg     =  { "-" }
 postfix = _{ !ANY }
 primary = _{ "(" ~ expr ~ ")" | fn | fn_call | literal | ident }
 
-fn_call = { !"fn" ~ ident ~ "(" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ ")" }
+fn_call = { ident ~ "(" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ ")" }
 fn      = { "fn" ~ args ~ block }
 args    = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
 block   = { "{" ~ statement* ~ expr? ~ "}" }
@@ -33,3 +33,4 @@ number  = @{
 }
 
 WHITESPACE = _{ " " | "\r\n" | "\n" }
+KEYWORDS   =  { "fn" | "true" | "false" | "let" | "return" | "if" | "else" }
