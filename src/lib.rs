@@ -20,7 +20,7 @@ mod parser;
 // }
 
 pub fn run_file(input: &str) -> Result<(), String> {
-    let program = parser::parse_file(input).map_err(|e| format!("Parse error: {}", e))?;
+    let program = parser::parse_file(input)?;
     for item in program.0 {
         println!("{:?}", item);
     }
@@ -28,7 +28,7 @@ pub fn run_file(input: &str) -> Result<(), String> {
 }
 
 pub fn run_line(input: &str) -> Result<(), String> {
-    let item = parser::parse_line(input).map_err(|e| format!("Parse error: {}", e))?;
+    let item = parser::parse_line(input)?;
     println!("{:?}", item);
     Ok(())
 }

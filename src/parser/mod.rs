@@ -11,7 +11,6 @@ mod prelude {
     pub use super::Rule;
 
     pub use pest::{
-        error::Error,
         iterators::{Pair, Pairs},
         pratt_parser::{Assoc, Op, PrattParser},
         Parser,
@@ -25,18 +24,21 @@ use prelude::*;
 #[grammar = "parser/grammar.pest"]
 struct SirenParser;
 
-pub fn parse_file(input: &str) -> Result<Program, Error<Rule>> {
+pub fn parse_file(input: &str) -> Result<Program, String> {
     let pratt = build_pratt_parser();
-    let items: Vec<Item> = SirenParser::parse(Rule::program, input)?
+    let items: Vec<Item> = SirenParser::parse(Rule::program, input)
+        .map_err(|e| format!("Parse error: {}", e))?
         .filter_map(|p| parse_item(p, &pratt))
         .collect();
 
     Ok(Program(items))
 }
 
-pub fn parse_line(input: &str) -> Result<Option<Item>, Error<Rule>> {
+pub fn parse_line(input: &str) -> Result<Option<Item>, String> {
     let pratt = build_pratt_parser();
-    SirenParser::parse(Rule::item, input).map(|mut pairs| parse_item(pairs.next().unwrap(), &pratt))
+    SirenParser::parse(Rule::item, input)
+        .map(|mut pairs| parse_item(pairs.next().unwrap(), &pratt))
+        .map_err(|e| format!("Parse error: {}", e))
 }
 
 #[cfg(test)]
