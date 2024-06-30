@@ -20,6 +20,8 @@ mod prelude {
 
 use prelude::*;
 
+pub use ast::*;
+
 #[derive(Parser)]
 #[grammar = "parser/grammar.pest"]
 struct SirenParser;

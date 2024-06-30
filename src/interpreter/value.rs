@@ -1,9 +1,8 @@
+use super::*;
 use std::{
     fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
-
-use crate::parser::Statement;
 
 macro_rules! get_value_typename {
     ($value: ident) => {
@@ -33,7 +32,7 @@ impl Display for Value {
             Value::Int(num) => write!(f, "{}", num),
             Value::Fn { params, body } => write!(
                 f,
-                "fn ({}) {{ {}}}",
+                "fn ({}) {{ {} }}",
                 params.join(", "),
                 body.iter()
                     .map(|stmt| format!("{:?}; ", stmt))

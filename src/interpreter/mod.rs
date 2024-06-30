@@ -2,9 +2,10 @@ mod value;
 
 use std::{collections::HashMap, fmt::Display, iter::zip};
 
-use crate::parser::*;
 pub use value::Value;
 use value::*;
+
+use super::parser::*;
 
 macro_rules! get_value {
     ($value: expr, $type: ident) => {
@@ -204,8 +205,8 @@ impl Evaluator {
     fn eval_if(
         &mut self,
         cond: Value,
-        then: &BlockStmt,
-        els: &Option<BlockStmt>,
+        then: &Vec<Statement>,
+        els: &Option<Vec<Statement>>,
     ) -> Result<Value, String> {
         if get_value!(cond, Bool)? {
             self.eval_block(then)
@@ -216,7 +217,7 @@ impl Evaluator {
         }
     }
 
-    fn eval_block(&mut self, block: &BlockStmt) -> Result<Value, String> {
+    fn eval_block(&mut self, block: &Vec<Statement>) -> Result<Value, String> {
         self.env.push();
         let mut result = Value::Unit;
         for stmt in block {
@@ -273,12 +274,9 @@ mod tests {
 
     macro_rules! build_siren_function {
         ($program: literal) => {{
-            let stmt: Statement = SirenParser::parse_line($program).unwrap();
+            let stmt = parse_line($program).unwrap();
             match stmt {
-                Statement::Let {
-                    name,
-                    value: Expr::Function { params, body },
-                } => (name, params, body),
+                Statement::Let(name, Box::<Expr::Fn<f>>) => {}
                 _ => unreachable!(),
             }
         }};
@@ -302,7 +300,7 @@ mod tests {
         test_siren_function_input_output!(
             "let abs = fn (x) {
                 if x > 0 {x} else { -x}
-            }",
+            };",
             vec![Value::Int(0)] => 0,
             vec![Value::Int(-5)] => 5,
             vec![Value::Int(15)] => 15,
@@ -322,7 +320,7 @@ mod tests {
                     ans = fib(n - 1) + fib(n - 2);
                 };
                 ans
-            }",
+            };",
             vec![Value::Int(0)] => 1,
             vec![Value::Int(1)] => 1,
             vec![Value::Int(2)] => 2,
@@ -341,7 +339,7 @@ mod tests {
         test_siren_function_input_output!(
             "let max = fn (a, b) {
                 if a > b {a} else {b}
-            }",
+            };",
             vec![Value::Int(0), Value::Int(1)] => 1,
             vec![Value::Int(76), Value::Int(3)] => 76,
             vec![Value::Int(-2), Value::Int(-5)] => -2,
