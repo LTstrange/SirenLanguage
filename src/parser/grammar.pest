@@ -2,10 +2,10 @@ program = _{ SOI ~ item* ~ EOI }
 
 item = _{ let_stmt }
 
-statement = { let_stmt | ret_stmt | set_stmt }
-let_stmt  = { "let" ~ ident ~ "=" ~ expr ~ ";" }
-ret_stmt  = { "return" ~ expr ~ ";" }
-set_stmt  = { ident ~ "=" ~ expr ~ ";" }
+statement = _{ let_stmt | ret_stmt | set_stmt }
+let_stmt  =  { "let" ~ ident ~ "=" ~ expr ~ ";" }
+set_stmt  =  { ident ~ "=" ~ expr ~ ";" }
+ret_stmt  =  { "return" ~ expr ~ ";" }
 
 ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 
@@ -21,7 +21,7 @@ neg     =  { "-" }
 postfix = _{ !ANY }
 primary = _{ "(" ~ expr ~ ")" | fn | fn_call | literal | ident }
 
-fn_call = { !"fn" ~ ident ~ "(" ~  (expr ~ ("," ~ expr)* ~ ","? )? ~ ")" }
+fn_call = { !"fn" ~ ident ~ "(" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ ")" }
 fn      = { "fn" ~ args ~ block }
 args    = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
 block   = { "{" ~ statement* ~ expr? ~ "}" }
