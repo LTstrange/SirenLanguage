@@ -26,3 +26,9 @@ pub fn run_file(input: &str) -> Result<(), String> {
     }
     Ok(())
 }
+
+pub fn run_line(input: &str) -> Result<(), String> {
+    let item = parser::parse_line(input).map_err(|e| format!("Parse error: {}", e))?;
+    println!("{:?}", item);
+    Ok(())
+}
