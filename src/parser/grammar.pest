@@ -1,0 +1,35 @@
+program = _{ SOI ~ item* ~ EOI }
+
+item = _{ let_stmt }
+
+statement = { let_stmt | ret_stmt | set_stmt }
+let_stmt  = { "let" ~ ident ~ "=" ~ expr ~ ";" }
+ret_stmt  = { "return" ~ expr ~ ";" }
+set_stmt  = { ident ~ "=" ~ expr ~ ";" }
+
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+
+// pratt parser
+expr    =  { prefix? ~ primary ~ postfix? ~ (infix ~ prefix? ~ primary ~ postfix?)* }
+infix   = _{ add | sub | mul | div }
+add     =  { "+" }
+sub     =  { "-" }
+mul     =  { "*" }
+div     =  { "/" }
+prefix  = _{ neg }
+neg     =  { "-" }
+postfix = _{ call }
+call    =  { params }
+primary = _{ "(" ~ expr ~ ")" | fn | literal | ident }
+
+fn     = { "fn" ~ params ~ block }
+params = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
+block  = { "{" ~ statement* ~ expr? ~ "}" }
+
+literal = _{ number | boolean }
+boolean =  { "true" | "false" }
+number  = @{
+    "-"? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
+
+WHITESPACE = _{ " " | "\r\n" | "\n" }
