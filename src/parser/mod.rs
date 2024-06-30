@@ -63,7 +63,13 @@ mod tests {
 
     #[test]
     fn test_func_build() {
-        let input = r#"let main = fn(a, b) {42};"#;
+        let input = r#"
+let main = fn(a, b){
+    let a = b;
+    a = b;
+    return a;
+    42
+};"#;
         test_input(input);
     }
 }
