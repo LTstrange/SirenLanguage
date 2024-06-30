@@ -43,10 +43,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse() {
-        let file = r#"let main = sum(a, 13);"#;
+    fn test_calculate_expression() {
+        let input = r#"let a = 123 - 12 / 4; let b = (-a + 42) / 2;"#;
 
-        let p = parse_file(file).unwrap();
+        let p = parse_file(input).unwrap();
+        println!("{:#?}", p);
+    }
+
+    #[test]
+    fn test_parse() {
+        let input = r#"let main = sum(a, 13);"#;
+
+        let p = parse_file(input).unwrap();
         println!("{:#?}", p);
     }
 }
