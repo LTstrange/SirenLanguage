@@ -22,9 +22,9 @@ postfix = _{ call }
 call    =  { params }
 primary = _{ "(" ~ expr ~ ")" | fn | literal | ident }
 
-fn     = { "fn" ~ params ~ block }
-params = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
-block  = { "{" ~ statement* ~ expr? ~ "}" }
+fn     =  { "fn" ~ params ~ block }
+params = _{ "(" ~ ")" | "(" ~ expr ~ ("," ~ expr)* ~ ","? ~ ")" }
+block  =  { "{" ~ statement* ~ expr? ~ "}" }
 
 literal = _{ number | boolean }
 boolean =  { "true" | "false" }

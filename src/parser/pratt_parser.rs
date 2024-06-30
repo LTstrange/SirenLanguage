@@ -32,5 +32,15 @@ pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr
             Rule::neg => Expr::UnaryOp(Prefix::Neg, Box::new(rhs)),
             _ => unreachable!("get unexpected prefix operator in pratt: {op:?}"),
         })
+        .map_postfix(|lhs, op| match op.as_rule() {
+            Rule::call => Expr::Call {
+                func: Box::new(lhs),
+                args: op
+                    .into_inner()
+                    .map(|arg| pratt_parse(arg.into_inner(), &pratt))
+                    .collect(),
+            },
+            _ => unreachable!("get unexpected postfix operator in pratt: {op:?}"),
+        })
         .parse(expr)
 }

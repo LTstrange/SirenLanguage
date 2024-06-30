@@ -27,7 +27,6 @@ fn parse_item<'a>(item: Pair<'a, Rule>, pratt: &PrattParser<Rule>) -> Option<Ite
 pub fn parse_file(input: &str) -> Result<Program, Error<Rule>> {
     let pratt = build_pratt_parser();
     let items: Vec<Item> = SirenParser::parse(Rule::program, input)?
-        .inspect(|r| println!("{r}"))
         .filter_map(|p| parse_item(p, &pratt))
         .collect();
 
@@ -45,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let file = r#"let main = 42 + 1;"#;
+        let file = r#"let main = sum(a, 13);"#;
 
         let p = parse_file(file).unwrap();
         println!("{:#?}", p);
