@@ -1,25 +1,31 @@
+use clap::Parser;
 use colored::Colorize;
-use siren_language::{run, run_file, Evaluator};
-use std::io::{self, Read, Write};
+use siren_language::{run_file, run_line};
+use std::{
+    fs,
+    io::{self, Write},
+    path::PathBuf,
+};
+
+#[derive(Parser)]
+struct Cli {
+    #[arg(
+        value_name = "source file",
+        help = "Path to the source file to interpret"
+    )]
+    file: Option<PathBuf>,
+}
 
 fn main() {
-    let args = std::env::args().collect::<Vec<String>>();
-    // Create a new running environment
-    let mut env = Evaluator::new(None);
-
-    if args.len() == 1 {
-        repl(&mut env);
-    } else if args.len() == 2 && args[1].ends_with(".siren") {
-        // file interprete
-        file_interpreter(&mut env, &args[1]);
+    let cli = Cli::parse();
+    if let Some(file) = cli.file {
+        file_interpreter(file);
     } else {
-        println!("Usage:");
-        println!("    siren              : repl");
-        println!("    siren <file>.siren : interpret file");
+        repl();
     }
 }
 
-fn repl(evaluator: &mut Evaluator) {
+fn repl() {
     // repl
     loop {
         print!("> ");
@@ -35,35 +41,22 @@ fn repl(evaluator: &mut Evaluator) {
             "" => continue,
             "quit" | "q" => break,
             // run input on the environment
-            input => match run(evaluator, input) {
-                Ok(output) => println!("{}", output), // print the result
-                Err(msg) => println!("{}", format!("Error: {}", msg).red()),
-            },
+            input => {
+                if let Err(msg) = run_line(input) {
+                    println!("{}", format!("Error: {}", msg).red());
+                }
+            }
         }
     }
 }
 
-fn file_interpreter(evaluator: &mut Evaluator, file_name: &str) {
-    let file = std::fs::File::open(file_name);
-    match file {
-        Ok(mut file) => {
-            let mut content = String::new();
-            file.read_to_string(&mut content).unwrap();
-            println!("Content:");
-            println!("{}", content);
-            match run_file(evaluator, content) {
-                Ok(()) => println!("Done."),
-                Err(msg) => {
-                    println!("{}", format!("Error: {}", msg).red());
-                }
+fn file_interpreter(path: PathBuf) {
+    match fs::read_to_string(path) {
+        Ok(content) => {
+            if let Err(msg) = run_file(&content) {
+                println!("{}", format!("Error: {}", msg).red());
             }
-
-            println!("Env:"); // print variables in the environment
-            println!("{}", evaluator.env);
         }
-        Err(msg) => {
-            // not such file
-            println!("{}", format!("Error: {}", msg).red());
-        }
+        Err(e) => println!("No such file: {}", e.to_string().red()),
     }
 }
