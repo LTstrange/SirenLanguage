@@ -8,4 +8,4 @@ let fib = fn (n) {
     ans
 };
 
-let a = fib(5);
+let main = fib(5);

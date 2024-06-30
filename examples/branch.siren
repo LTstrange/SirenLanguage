@@ -1,8 +1,10 @@
-let a = 5;
-let b = 10;
+let main = fn () {
+    let a = 5;
+    let b = 10;
 
-if (b < a) {
-    b = a;
-}else {
-    a = b;
-};
+    if (b < a) {
+        b = a;
+    }else {
+        a = b;
+    };
+}
