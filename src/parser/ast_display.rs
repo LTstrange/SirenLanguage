@@ -98,8 +98,6 @@ impl Display for Ident<'_> {
 mod tests {
     use crate::parser::parse_file;
 
-    use super::*;
-
     #[test]
     fn test_program() {
         let a = parse_file(r#""#).unwrap();
