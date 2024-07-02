@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use super::prelude::*;
 
+#[derive(Clone)]
 pub enum Value {
     Number(f32),
 }

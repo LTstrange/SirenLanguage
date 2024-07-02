@@ -8,7 +8,8 @@ pub fn run_file(input: &str) -> Result<(), String> {
     let program = parser::parse_file(input)?;
     println!("{}", program);
     let code = compile(program).unwrap();
-    VM::new(&code).run();
+    let result = VM::new(&code).run().unwrap();
+    println!("Result: {}", result);
     Ok(())
 }
 
