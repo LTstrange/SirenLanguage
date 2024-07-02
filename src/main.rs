@@ -26,7 +26,6 @@ fn main() {
 }
 
 fn repl() {
-    // repl
     loop {
         print!("> ");
         io::stdout().flush().unwrap();
