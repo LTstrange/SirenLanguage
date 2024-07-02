@@ -1,15 +1,18 @@
-use std::fmt::Display;
+mod instruction;
+mod stack;
+mod value;
 
-enum Instruction {
-    Ret,
+mod prelude {
+    pub use super::instruction::*;
+    pub use super::stack::*;
+    pub use super::value::*;
 }
 
-struct Chunk {
-    instructions: Vec<Instruction>,
-    constants: Vec<Value>,
-}
+use super::*;
+use prelude::*;
 
-#[cfg(debug)]
-impl Display for Chunk {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {}
+pub use stack::VM;
+
+pub fn compile(program: Program) -> Result<Chunk, String> {
+    todo!()
 }
