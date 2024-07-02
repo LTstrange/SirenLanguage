@@ -44,10 +44,10 @@ impl Index<usize> for Chunk {
 pub enum Inst {
     // Push(isize),
     // Pop,
-    // Add,
-    // Mul,
-    // Div,
-    // Sub,
+    Add,
+    Sub,
+    Mul,
+    Div,
     // Incr,
     // Decr,
     Neg,
@@ -74,6 +74,10 @@ pub fn disassemble_chunk(chunk: &Chunk, name: &str) {
             }
             Inst::Ret => println!("OP_RETURN"),
             Inst::Neg => println!("OP_NEGATE"),
+            Inst::Add => println!("OP_ADDITION"),
+            Inst::Sub => println!("OP_SUBTRACT"),
+            Inst::Mul => println!("OP_MULTIPLY"),
+            Inst::Div => println!("OP_DIVIDE"),
         }
     }
 }
