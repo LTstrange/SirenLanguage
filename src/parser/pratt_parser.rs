@@ -14,13 +14,6 @@ pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr
             Rule::ident => Expr::Id(Ident(primary.as_str())),
             Rule::number => Expr::Literal(Literal::Number(primary.as_str().parse().unwrap())),
             Rule::boolean => Expr::Literal(Literal::Boolean(primary.as_str().parse().unwrap())),
-            // Rule::fn_call => {
-            //     let mut pairs = primary.into_inner(); //  ident ~ [ expr ]
-            //     let ident = pairs.next().unwrap(); // ident
-            //     let func = Box::new(Expr::Id(Ident(ident.as_str())));
-            //     let args = pairs.map(|p| pratt_parse(p.into_inner(), pratt)).collect(); // [ expr ]
-            //     Expr::Call { func, args }
-            // }
             Rule::r#fn => Expr::Fn(parse_function_def(primary.into_inner(), pratt)),
             Rule::expr => pratt_parse(primary.into_inner(), pratt), // "(" ~ expr ~ ")"
             p => unreachable!("get unexpected primary in pratt: {p:?}"),
