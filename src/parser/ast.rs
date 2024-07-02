@@ -3,7 +3,7 @@ pub struct Program<'a>(pub Vec<Item<'a>>);
 
 #[derive(Debug)]
 pub enum Item<'a> {
-    DefItem { ident: &'a str, expr: Expr<'a> },
+    DefItem { ident: Ident<'a>, expr: Expr<'a> },
 }
 
 #[derive(Debug)]
@@ -43,7 +43,7 @@ pub struct Ident<'a>(pub &'a str);
 
 #[derive(Debug)]
 pub struct Function<'a> {
-    pub params: Vec<&'a str>,
+    pub params: Vec<Ident<'a>>,
     pub body: Vec<Statement<'a>>, // todo: change to Statements
 }
 

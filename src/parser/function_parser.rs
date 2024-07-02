@@ -8,7 +8,7 @@ pub fn parse_function_def<'a>(
         .next()
         .unwrap()
         .into_inner() // [ ident ]
-        .map(|arg| arg.as_str())
+        .map(|arg| Ident(arg.as_str()))
         .collect();
 
     let body = pairs
