@@ -1,5 +1,6 @@
 // mod interpreter;
 mod parser;
+mod stack_vm;
 
 pub fn run_file(input: &str) -> Result<(), String> {
     let program = parser::parse_file(input)?;
