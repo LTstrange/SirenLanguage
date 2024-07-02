@@ -1,3 +1,10 @@
+/// Deprecated!!!!
+/// Only for reference.
+/// This is a AST Tree Walker Interpreter.
+/// Its really slow, So I turned to Stack VM Interpreter.
+/// See "src/stack_vm"
+/// And because I updated the parser and the structure of AST,
+/// this interpreter is accually outdated.
 mod value;
 
 use std::{collections::HashMap, fmt::Display, iter::zip};
