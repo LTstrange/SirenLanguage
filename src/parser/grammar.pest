@@ -18,13 +18,13 @@ mul     =  { "*" }
 div     =  { "/" }
 prefix  = _{ neg }
 neg     =  { "-" }
-postfix = _{ !ANY }
-primary = _{ "(" ~ expr ~ ")" | fn | fn_call | literal | ident }
+postfix = _{ call }
+call    =  { "(" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ ")" }
+primary = _{ "(" ~ expr ~ ")" | fn | literal | ident }
 
-fn_call = { ident ~ "(" ~ (expr ~ ("," ~ expr)* ~ ","?)? ~ ")" }
-fn      = { "fn" ~ args ~ block }
-args    = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
-block   = { "{" ~ statement* ~ expr? ~ "}" }
+fn    = { "fn" ~ args ~ block }
+args  = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
+block = { "{" ~ statement* ~ expr? ~ "}" }
 
 literal = _{ number | boolean }
 boolean =  { "true" | "false" }
