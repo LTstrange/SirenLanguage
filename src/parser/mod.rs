@@ -1,4 +1,5 @@
 mod ast;
+mod ast_display;
 mod function_parser;
 mod item_parser;
 mod pratt_parser;
