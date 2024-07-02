@@ -1,3 +1,5 @@
-let main = fn () {
+let main = fn (i, j, k) {
+    let a = 123 - 12 / 4;
+    let b = (-a + 42) / 2;
     42
-};
+}(1,true,3);
