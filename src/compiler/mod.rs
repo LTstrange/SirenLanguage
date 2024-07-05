@@ -54,16 +54,16 @@ fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
     Ok(())
 }
 
-pub fn compile_item(item: Item) -> Result<Chunk, String> {
-    let mut chunk = Chunk::new();
+fn compile_item(item: Item, chunk: &mut Chunk) -> Result<(), String> {
     match item {
-        Item::DefItem { ident: _, expr: _ } => todo!(),
+        Item::DefItem { ident: _, expr } => compile_expr(expr, chunk)?,
     };
-    Ok(chunk)
+    Ok(())
 }
 pub fn compile(program: Program) -> Result<Chunk, String> {
+    let mut chunk = Chunk::new();
     for item in program.0 {
-        let _ = compile_item(item)?;
+        compile_item(item, &mut chunk)?;
     }
-    Ok(Chunk::new())
+    Ok(chunk)
 }
