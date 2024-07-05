@@ -18,6 +18,8 @@ pub enum Inst {
 
     // Get(i8),
     // Set(i8),
+    DefineGlobal(u8),
+    GetGlobal(u8),
 
     // Call(Pointer),
     Ret,
@@ -39,6 +41,12 @@ impl Inst {
                 )
             }
             Inst::Ret => "OP_RETURN".to_string(),
+            Inst::DefineGlobal(ind) => {
+                format!("OP_DEFINE_GLOBAL  '{}'", chunk.get_const(*ind as usize))
+            }
+            Inst::GetGlobal(ind) => {
+                format!("OP_Get_GLOBAL     '{}'", chunk.get_const(*ind as usize))
+            }
         }
     }
 }

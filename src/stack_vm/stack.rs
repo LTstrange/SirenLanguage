@@ -1,9 +1,12 @@
+use std::collections::HashMap;
+
 use super::*;
 
 pub struct VM<'a> {
     stack: Vec<Value>,
     pc: Pointer,
     code: &'a Chunk,
+    globals: HashMap<String, Value>,
 }
 
 impl<'a> VM<'a> {
@@ -12,6 +15,7 @@ impl<'a> VM<'a> {
             stack: Vec::new(),
             pc: 0,
             code,
+            globals: HashMap::new(),
         }
     }
 
@@ -30,6 +34,27 @@ impl<'a> VM<'a> {
                     _ => todo!("Invalid negation"),
                 },
                 Inst::Add | Inst::Sub | Inst::Div | Inst::Mul => binary_op(self, op)?,
+                Inst::DefineGlobal(ind) => {
+                    let Value::String(name) = self.code.get_const(*ind as usize) else {
+                        return Err(RuntimeError::BadInstruction(
+                            "Unwrap Ident, but not get string!!".to_string(),
+                        ));
+                    };
+                    let value = self.pop()?;
+                    self.globals.insert(name.clone(), value);
+                }
+                Inst::GetGlobal(ind) => {
+                    let Value::String(name) = self.code.get_const(*ind as usize) else {
+                        return Err(RuntimeError::BadInstruction(
+                            "Unwrap Ident, but not get string!!".to_string(),
+                        ));
+                    };
+                    if let Some(value) = self.globals.get(name) {
+                        self.stack.push(value.clone());
+                    } else {
+                        return Err(RuntimeError::UndefinedVariable(name.to_string()));
+                    }
+                },
             }
             self.pc += 1;
             self.print_stack(op, self.code);

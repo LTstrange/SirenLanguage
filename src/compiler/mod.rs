@@ -8,7 +8,10 @@ pub use instruction::Inst;
 
 fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
     match expr {
-        Expr::Id(_name) => todo!(),
+        Expr::Id(name) => {
+            let ind = chunk.add_constant(Value::String(name.to_string()));
+            chunk.add_inst(Inst::GetGlobal(ind));
+        }
         Expr::Literal(Literal::Boolean(_b)) => {
             // let b  = chunk.add_constant(Value::(b));
             // chunk.add_inst(Inst::Const(b));
@@ -56,7 +59,11 @@ fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
 
 fn compile_item(item: Item, chunk: &mut Chunk) -> Result<(), String> {
     match item {
-        Item::DefItem { ident: _, expr } => compile_expr(expr, chunk)?,
+        Item::DefItem { ident, expr } => {
+            compile_expr(expr, chunk)?;
+            let ind = chunk.add_constant(Value::String(ident.to_string()));
+            chunk.add_inst(Inst::DefineGlobal(ind));
+        }
     };
     Ok(())
 }
