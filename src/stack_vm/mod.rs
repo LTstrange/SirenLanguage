@@ -24,7 +24,7 @@ mod tests {
 
         match vm.run() {
             Ok(Value::Number(v)) => assert_eq!(v, -1.2),
-            Err(_) => todo!(),
+            _ => unreachable!("Test fail: Didn't return a number"),
         }
     }
 
@@ -44,7 +44,7 @@ mod tests {
         let mut vm = VM::new(&chunk);
         match vm.run() {
             Ok(Value::Number(v)) => assert_eq!(v, -0.82142866),
-            Err(_) => todo!(),
+            _ => unreachable!("Test fail: Didn't return a number"),
         }
     }
 }

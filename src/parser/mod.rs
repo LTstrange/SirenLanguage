@@ -53,7 +53,7 @@ mod tests {
     fn test_input(input: &str) {
         match parse_file(input) {
             Ok(p) => println!("{:#?}", p),
-            Err(e) => panic!("Error: {}", e),
+            Err(ParserError::Default(e)) => panic!("Error: {}", e),
         }
     }
 
