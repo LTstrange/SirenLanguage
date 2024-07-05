@@ -34,7 +34,7 @@ impl<'a> VM<'a> {
             self.pc += 1;
             self.print_stack();
         }
-        Ok(Value::Number(42.))
+        Ok(self.stack.pop().unwrap())
     }
 
     pub fn print_stack(&self) {
