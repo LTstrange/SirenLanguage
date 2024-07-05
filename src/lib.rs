@@ -15,8 +15,8 @@ pub enum SirenError {
 pub fn run_file(input: &str) -> Result<(), SirenError> {
     let program = parse_file(input).map_err(SirenError::Parse)?;
     println!("{}", program);
-    let code = compile(program).unwrap();
-    let result = VM::new(&code).run().unwrap();
+    let code = compile(program).map_err(SirenError::Compile)?;
+    let result = VM::new(&code).run().map_err(SirenError::Runtime)?;
     println!("Output: {}", result);
     Ok(())
 }

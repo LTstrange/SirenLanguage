@@ -15,7 +15,7 @@ impl<'a> VM<'a> {
         }
     }
 
-    pub fn run(&mut self) -> Result<Value, String> {
+    pub fn run(&mut self) -> Result<Value, RuntimeError> {
         while self.pc < self.code.len() {
             let op = &self.code[self.pc];
             match op {
@@ -23,18 +23,19 @@ impl<'a> VM<'a> {
                     self.stack.push(self.code.get_const(*ind as usize).clone());
                 }
                 Inst::Ret => {
-                    let v = self.stack.pop().unwrap();
+                    let v = self.pop()?;
                     return Ok(v);
                 }
-                Inst::Neg => match self.stack.pop().unwrap() {
+                Inst::Neg => match self.pop()? {
                     Value::Number(v) => self.stack.push(Value::Number(-v)),
+                    _ => todo!("Invalid negation"),
                 },
-                Inst::Add | Inst::Sub | Inst::Div | Inst::Mul => binary_op(self, op),
+                Inst::Add | Inst::Sub | Inst::Div | Inst::Mul => binary_op(self, op)?,
             }
             self.pc += 1;
             self.print_stack();
         }
-        Ok(self.stack.pop().unwrap())
+        Ok(self.pop().or(Ok(Value::Unit))?)
     }
 
     pub fn print_stack(&self) {
@@ -44,11 +45,19 @@ impl<'a> VM<'a> {
         }
         println!();
     }
+
+    fn pop(&mut self) -> Result<Value, RuntimeError> {
+        self.stack.pop().ok_or(RuntimeError::StackEmpty)
+    }
 }
 
-fn binary_op(vm: &mut VM, op: &Inst) {
-    let Value::Number(b) = vm.stack.pop().unwrap();
-    let Value::Number(a) = vm.stack.pop().unwrap();
+fn binary_op(vm: &mut VM, op: &Inst) -> Result<(), RuntimeError> {
+    let Value::Number(b) = vm.pop()? else {
+        return Err(RuntimeError::TypeMismatch("Expect Number".to_string()));
+    };
+    let Value::Number(a) = vm.pop()? else {
+        return Err(RuntimeError::TypeMismatch("Expect Number".to_string()));
+    };
     let v = match op {
         Inst::Add => Value::Number(a + b),
         Inst::Sub => Value::Number(a - b),
@@ -57,4 +66,5 @@ fn binary_op(vm: &mut VM, op: &Inst) {
         _ => panic!("Invalid binary operation"),
     };
     vm.stack.push(v);
+    Ok(())
 }

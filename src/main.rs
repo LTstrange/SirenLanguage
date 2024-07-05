@@ -1,11 +1,7 @@
 use clap::Parser;
 use colored::Colorize;
-use siren_language::{run_file, run_line};
-use std::{
-    fs,
-    io::{self, Write},
-    path::PathBuf,
-};
+use siren_language::{run_file, SirenError};
+use std::{fs, path::PathBuf};
 
 #[derive(Parser)]
 struct Cli {
@@ -53,7 +49,11 @@ fn file_interpreter(path: PathBuf) {
     match fs::read_to_string(path.clone()) {
         Ok(content) => {
             if let Err(msg) = run_file(&content) {
-                println!("{}", format!("Error: {}", msg).red());
+                match msg {
+                    SirenError::Parse(msg) => println!("Parse error:\n{}", msg),
+                    SirenError::Compile(msg) => println!("Compilation error:\n{}", msg),
+                    SirenError::Runtime(msg) => println!("Runtime error:\n{}", msg),
+                }
             }
         }
         Err(e) => println!(

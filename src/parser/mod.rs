@@ -29,10 +29,10 @@ pub use error::*;
 #[grammar = "parser/grammar.pest"]
 struct SirenParser;
 
-pub fn parse_file(input: &str) -> Result<Program, String> {
+pub fn parse_file(input: &str) -> Result<Program, ParserError> {
     let pratt = build_pratt_parser();
     let items: Vec<Item> = SirenParser::parse(Rule::program, input)
-        .map_err(|e| format!("Parse error: {}", e))?
+        .map_err(|e| ParserError::Default(format!("{}", e)))?
         .filter_map(|p| parse_item(p, &pratt))
         .collect();
 
