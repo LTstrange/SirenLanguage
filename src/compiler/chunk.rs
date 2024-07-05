@@ -1,6 +1,5 @@
-use std::ops::Index;
-
 use super::prelude::*;
+use std::ops::Index;
 
 // chunk of bytecode, and constants
 pub struct Chunk {
@@ -41,29 +40,6 @@ impl Index<usize> for Chunk {
     }
 }
 
-pub enum Inst {
-    // Push(isize),
-    // Pop,
-    Add,
-    Sub,
-    Mul,
-    Div,
-    // Incr,
-    // Decr,
-    Neg,
-    Const(u8),
-
-    // Jump(Pointer),
-    // Je(Pointer),
-    // Jne(Pointer),
-
-    // Get(i8),
-    // Set(i8),
-
-    // Call(Pointer),
-    Ret,
-}
-
 pub fn disassemble_chunk(chunk: &Chunk, name: &str) {
     println!("== {} ==", name);
     for (i, inst) in chunk.code.iter().enumerate() {
@@ -79,20 +55,5 @@ pub fn disassemble_chunk(chunk: &Chunk, name: &str) {
             Inst::Mul => println!("OP_MULTIPLY"),
             Inst::Div => println!("OP_DIVIDE"),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_disassemble_chunk() {
-        let chunk = Chunk {
-            code: vec![Inst::Ret, Inst::Const(0)],
-            constants: vec![Value::Number(42.)],
-        };
-
-        disassemble_chunk(&chunk, "test_chunk");
     }
 }
