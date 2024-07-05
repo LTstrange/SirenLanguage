@@ -22,6 +22,10 @@ fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
             let n = chunk.add_constant(Value::Number(n));
             chunk.add_inst(Inst::Const(n));
         }
+        Expr::Literal(Literal::String(s)) => {
+            let ind = chunk.add_constant(Value::String(s.to_string()));
+            chunk.add_inst(Inst::Const(ind));
+        }
         Expr::BinOp(lhs, op, rhs) => {
             compile_expr(*lhs, chunk)?;
             compile_expr(*rhs, chunk)?;

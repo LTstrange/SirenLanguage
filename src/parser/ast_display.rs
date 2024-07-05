@@ -26,6 +26,7 @@ impl Display for Expr<'_> {
             Expr::Id(Ident(name)) => write!(f, "{}", name),
             Expr::Literal(Literal::Boolean(b)) => write!(f, "{}", b),
             Expr::Literal(Literal::Number(n)) => write!(f, "{}", n),
+            Expr::Literal(Literal::String(s)) => write!(f, "{:?}", s),
             Expr::BinOp(lhs, op, rhs) => write!(f, "({} {} {})", op, lhs, rhs),
             Expr::Prefix(op, rhs) => write!(f, "({} {})", op, rhs),
             Expr::Fn(function) => write!(f, "{}", function),

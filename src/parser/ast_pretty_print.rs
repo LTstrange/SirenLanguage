@@ -34,6 +34,7 @@ fn pretty_print_expr(expr: &Expr, depth: u8) {
         Expr::Id(ident) => print_with_tab!(depth, ident),
         Expr::Literal(Literal::Boolean(b)) => print_with_tab!(depth, b),
         Expr::Literal(Literal::Number(n)) => print_with_tab!(depth, n),
+        Expr::Literal(Literal::String(s)) => print_with_tab!(depth, format!("{:?}", s)),
         Expr::BinOp(lhs, op, rhs) => {
             print_with_tab!(depth, format!("({}", op));
             pretty_print_expr(lhs, depth + 1);

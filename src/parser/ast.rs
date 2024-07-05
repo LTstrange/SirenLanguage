@@ -9,7 +9,7 @@ pub enum Item<'a> {
 #[derive(Debug)]
 pub enum Expr<'a> {
     Id(Ident<'a>),
-    Literal(Literal),
+    Literal(Literal<'a>),
     BinOp(Box<Expr<'a>>, Infix, Box<Expr<'a>>),
     Prefix(Prefix, Box<Expr<'a>>),
     Fn(Function<'a>),
@@ -20,9 +20,10 @@ pub enum Expr<'a> {
 }
 
 #[derive(Debug)]
-pub enum Literal {
+pub enum Literal<'a> {
     Number(f32),
     Boolean(bool),
+    String(&'a str),
 }
 
 #[derive(Debug)]

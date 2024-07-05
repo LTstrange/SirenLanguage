@@ -16,6 +16,9 @@ pub fn pratt_parse<'a>(expr: Pairs<'a, Rule>, pratt: &PrattParser<Rule>) -> Expr
             Rule::boolean => Expr::Literal(Literal::Boolean(primary.as_str().parse().unwrap())),
             Rule::r#fn => Expr::Fn(parse_function_def(primary.into_inner(), pratt)),
             Rule::expr => pratt_parse(primary.into_inner(), pratt), // "(" ~ expr ~ ")"
+            Rule::string => Expr::Literal(Literal::String(
+                primary.into_inner().next().unwrap().as_str(),
+            )),
             p => unreachable!("get unexpected primary in pratt: {p:?}"),
         })
         .map_infix(|lhs, op, rhs| match op.as_rule() {

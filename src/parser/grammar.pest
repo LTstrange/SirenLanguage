@@ -25,10 +25,16 @@ fn    = { "fn" ~ args ~ block }
 args  = { "(" ~ ")" | "(" ~ ident ~ ("," ~ ident)* ~ ","? ~ ")" }
 block = { "{" ~ statement* ~ expr? ~ "}" }
 
-literal = _{ number | boolean }
+literal = _{ number | boolean | string }
 boolean =  { "true" | "false" }
 number  = @{
     "-"? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
+string  = ${ "\"" ~ inner ~ "\"" }
+inner   = @{ char* }
+char    =  {
+    !("\"" | "\\") ~ ANY
+  | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
 }
 
 WHITESPACE = _{ " " | "\r\n" | "\n" }
