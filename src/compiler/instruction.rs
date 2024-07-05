@@ -35,17 +35,17 @@ impl Inst {
             Inst::Neg => "OP_NEGATE".to_string(),
             Inst::Const(ind) => {
                 format!(
-                    "OP_CONSTANT    {} '{}'",
+                    "OP_CONSTANT    {:2}  '{}'",
                     ind,
                     chunk.get_const(*ind as usize)
                 )
             }
             Inst::Ret => "OP_RETURN".to_string(),
             Inst::DefineGlobal(ind) => {
-                format!("OP_DEFINE_GLOBAL  '{}'", chunk.get_const(*ind as usize))
+                format!("OP_DEFINE_GLOBAL   '{}'", chunk.get_const(*ind as usize))
             }
             Inst::GetGlobal(ind) => {
-                format!("OP_Get_GLOBAL     '{}'", chunk.get_const(*ind as usize))
+                format!("OP_Get_GLOBAL      '{}'", chunk.get_const(*ind as usize))
             }
         }
     }
