@@ -16,9 +16,11 @@ pub use parser::pretty_print_program;
 
 pub fn run_file(input: &str) -> Result<(), SirenError> {
     let program = parse_file(input).map_err(SirenError::Parse)?;
+    println!("== AST ==");
     println!("{}", program);
     let code = compile(program).map_err(SirenError::Compile)?;
     disassemble_chunk(&code, "Compiled Code");
+    println!("== Stack Machine Execution ==");
     let result = VM::new(&code).run().map_err(SirenError::Runtime)?;
     println!("Output: {}", result);
     Ok(())
