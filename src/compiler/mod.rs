@@ -3,7 +3,7 @@ mod instruction;
 
 use super::*;
 
-pub use chunk::Chunk;
+pub use chunk::{disassemble_chunk, Chunk};
 pub use instruction::Inst;
 
 fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
