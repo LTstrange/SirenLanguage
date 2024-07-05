@@ -62,6 +62,9 @@ pub fn compile_item(item: Item) -> Result<Chunk, String> {
     };
     Ok(chunk)
 }
-pub fn compile(_program: Program) -> Result<Chunk, String> {
-    todo!()
+pub fn compile(program: Program) -> Result<Chunk, String> {
+    for item in program.0 {
+        let _ = compile_item(item)?;
+    }
+    Ok(Chunk::new())
 }
