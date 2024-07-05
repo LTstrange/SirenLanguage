@@ -1,11 +1,11 @@
-mod error;
+mod runtime_error;
 mod stack;
 mod value;
 
 use super::*;
 use value::*;
 
-pub use error::*;
+pub use runtime_error::*;
 pub use stack::VM;
 pub use value::Value;
 

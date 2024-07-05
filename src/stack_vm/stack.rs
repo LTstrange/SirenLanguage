@@ -46,7 +46,7 @@ impl<'a> VM<'a> {
     }
 
     fn pop(&mut self) -> Result<Value, RuntimeError> {
-        self.stack.pop().ok_or(RuntimeError::StackEmpty)
+        self.stack.pop().ok_or(RuntimeError::StackUnderFlow)
     }
 }
 
