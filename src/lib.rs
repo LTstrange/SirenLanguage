@@ -9,7 +9,7 @@ pub fn run_file(input: &str) -> Result<(), String> {
     println!("{}", program);
     let code = compile(program).unwrap();
     let result = VM::new(&code).run().unwrap();
-    println!("Result: {}", result);
+    println!("Output: {}", result);
     Ok(())
 }
 
@@ -17,6 +17,9 @@ pub fn run_line(input: &str) -> Result<(), String> {
     let item = parser::parse_line(input)?.unwrap();
     let code = compile_item(item).unwrap();
     let mut vm = VM::new(&code);
-    vm.run();
+    match vm.run() {
+        Ok(v) => {println!("Output: {}", v);},
+        Err(e) => {return Err(format!("RuntimeError: {}", e));}
+    }
     Ok(())
 }
