@@ -74,7 +74,7 @@ mod tests {
         let mut vm = VM::new(&chunk);
 
         match vm.run() {
-            Ok(v) => println!("{}", v),
+            Ok(Value::Number(v)) => assert_eq!(v, -1.2),
             Err(_) => todo!(),
         }
     }
@@ -94,7 +94,7 @@ mod tests {
         chunk.add_inst(Inst::Ret);
         let mut vm = VM::new(&chunk);
         match vm.run() {
-            Ok(v) => println!("{}", v),
+            Ok(Value::Number(v)) => assert_eq!(v, -0.82142866),
             Err(_) => todo!(),
         }
     }
