@@ -29,20 +29,20 @@ fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
             compile_expr(*lhs, chunk)?;
             compile_expr(*rhs, chunk)?;
             match op {
-                Infix::Add => {chunk.add_inst(Inst::Add); }
-                Infix::Sub => {chunk.add_inst(Inst::Sub); }
-                Infix::Mul => {chunk.add_inst(Inst::Mul); }
-                Infix::Div => {chunk.add_inst(Inst::Div); }
+                Infix::Add => { chunk.add_inst(Inst::Add); }
+                Infix::Sub => { chunk.add_inst(Inst::Sub); }
+                Infix::Mul => { chunk.add_inst(Inst::Mul); }
+                Infix::Div => { chunk.add_inst(Inst::Div); }
             }
         }
         Expr::Prefix(op, rhs) => {
             compile_expr(*rhs, chunk)?;
             match op {
-                Prefix::Neg => {chunk.add_inst(Inst::Neg); }
+                Prefix::Neg => { chunk.add_inst(Inst::Neg); }
             }
         }
-        Expr::Fn(_) => {todo!()}
-        Expr::Call { .. } => {todo!()}
+        Expr::Fn(_) => { todo!() }
+        Expr::Call { .. } => { todo!() }
     }
     Ok(())
 }
