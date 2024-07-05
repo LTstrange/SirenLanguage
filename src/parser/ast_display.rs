@@ -27,7 +27,7 @@ impl Display for Expr<'_> {
             Expr::Literal(Literal::Boolean(b)) => write!(f, "{}", b),
             Expr::Literal(Literal::Number(n)) => write!(f, "{}", n),
             Expr::BinOp(lhs, op, rhs) => write!(f, "({} {} {})", op, lhs, rhs),
-            Expr::UnaryOp(op, rhs) => write!(f, "({} {})", op, rhs),
+            Expr::Prefix(op, rhs) => write!(f, "({} {})", op, rhs),
             Expr::Fn(function) => write!(f, "{}", function),
             Expr::Call { func, args } => write!(f, "(call {} (args{}))", func, display_args(args)),
         }

@@ -11,7 +11,7 @@ pub enum Expr<'a> {
     Id(Ident<'a>),
     Literal(Literal),
     BinOp(Box<Expr<'a>>, Infix, Box<Expr<'a>>),
-    UnaryOp(Prefix, Box<Expr<'a>>),
+    Prefix(Prefix, Box<Expr<'a>>),
     Fn(Function<'a>),
     Call {
         func: Box<Expr<'a>>,
