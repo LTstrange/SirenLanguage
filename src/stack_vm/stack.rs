@@ -32,13 +32,13 @@ impl<'a> VM<'a> {
                 Inst::Add | Inst::Sub | Inst::Div | Inst::Mul => binary_op(self, op)?,
             }
             self.pc += 1;
-            self.print_stack();
+            self.print_stack(op, self.code);
         }
         Ok(self.stack.clone())
     }
 
-    pub fn print_stack(&self) {
-        print!("          ");
+    pub fn print_stack(&self, op: &Inst, chunk: &Chunk) {
+        print!("{:30} ", op.disassemble(chunk));
         for value in &self.stack {
             print!("[{}]", value);
         }

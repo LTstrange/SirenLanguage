@@ -1,3 +1,5 @@
+use super::*;
+
 pub enum Inst {
     // Push(isize),
     // Pop,
@@ -19,4 +21,24 @@ pub enum Inst {
 
     // Call(Pointer),
     Ret,
+}
+
+impl Inst {
+    pub fn disassemble(&self, chunk: &Chunk) -> String {
+        match self {
+            Inst::Add => "OP_ADDITION".to_string(),
+            Inst::Sub => "OP_SUBTRACT".to_string(),
+            Inst::Mul => "OP_MULTIPLY".to_string(),
+            Inst::Div => "OP_DIVIDE".to_string(),
+            Inst::Neg => "OP_NEGATE".to_string(),
+            Inst::Const(ind) => {
+                format!(
+                    "OP_CONSTANT    {} '{}'",
+                    ind,
+                    chunk.get_const(*ind as usize)
+                )
+            }
+            Inst::Ret => "OP_RETURN".to_string(),
+        }
+    }
 }

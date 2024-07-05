@@ -43,17 +43,6 @@ impl Index<usize> for Chunk {
 pub fn disassemble_chunk(chunk: &Chunk, name: &str) {
     println!("== {} ==", name);
     for (i, inst) in chunk.code.iter().enumerate() {
-        print!("{:04} ", i);
-        match inst {
-            Inst::Const(ind) => {
-                println!("OP_CONSTANT\t{} '{}'", ind, chunk.constants[*ind as usize])
-            }
-            Inst::Ret => println!("OP_RETURN"),
-            Inst::Neg => println!("OP_NEGATE"),
-            Inst::Add => println!("OP_ADDITION"),
-            Inst::Sub => println!("OP_SUBTRACT"),
-            Inst::Mul => println!("OP_MULTIPLY"),
-            Inst::Div => println!("OP_DIVIDE"),
-        }
+        println!("{:04} {}", i, inst.disassemble(chunk));
     }
 }
