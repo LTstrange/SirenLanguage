@@ -57,7 +57,6 @@ fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
 pub fn compile_item(item: Item) -> Result<Chunk, String> {
     let mut chunk = Chunk::new();
     match item {
-        Item::Expr(expr) => compile_expr(*expr, &mut chunk)?,
         Item::DefItem { ident: _, expr: _ } => todo!(),
     };
     Ok(chunk)
