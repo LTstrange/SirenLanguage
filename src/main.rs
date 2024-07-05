@@ -9,40 +9,12 @@ struct Cli {
         value_name = "source file",
         help = "Path to the source file to interpret"
     )]
-    file: Option<PathBuf>,
+    file: PathBuf,
 }
 
 fn main() {
     let cli = Cli::parse();
-    if let Some(file) = cli.file {
-        file_interpreter(file);
-    } else {
-        repl();
-    }
-}
-
-fn repl() {
-    loop {
-        print!("> ");
-        io::stdout().flush().unwrap();
-
-        // get user input
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-
-        // parse and run input
-        match input {
-            "" => continue,
-            "quit" | "q" => break,
-            // run input on the environment
-            input => {
-                if let Err(msg) = run_line(input) {
-                    println!("{}", format!("Error: {}", msg).red());
-                }
-            }
-        }
-    }
+    file_interpreter(cli.file);
 }
 
 fn file_interpreter(path: PathBuf) {

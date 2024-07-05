@@ -1,5 +1,4 @@
 program = _{ SOI ~ item* ~ EOI }
-repl    = _{ let_stmt | expr }
 item    = _{ let_stmt }
 
 statement = _{ let_stmt | ret_stmt | set_stmt }

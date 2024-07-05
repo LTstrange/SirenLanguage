@@ -39,12 +39,12 @@ pub fn parse_file(input: &str) -> Result<Program, ParserError> {
     Ok(Program(items))
 }
 
-pub fn parse_line(input: &str) -> Result<Option<Item>, String> {
-    let pratt = build_pratt_parser();
-    SirenParser::parse(Rule::repl, input)
-        .map(|mut pairs| parse_item(pairs.next().unwrap(), &pratt))
-        .map_err(|e| format!("Parse error: {}", e))
-}
+// pub fn parse_line(input: &str) -> Result<Option<Item>, String> {
+//     let pratt = build_pratt_parser();
+//     SirenParser::parse(Rule::repl, input)
+//         .map(|mut pairs| parse_item(pairs.next().unwrap(), &pratt))
+//         .map_err(|e| format!("Parse error: {}", e))
+// }
 
 #[cfg(test)]
 mod tests {
