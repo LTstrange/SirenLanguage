@@ -41,11 +41,12 @@ fn file_interpreter(path: PathBuf) {
     match fs::read_to_string(path.clone()) {
         Ok(content) => {
             if let Err(msg) = run_file(&content) {
-                match msg {
-                    SirenError::Parse(msg) => println!("Parse error:\n{}", msg),
-                    SirenError::Compile(msg) => println!("Compilation error:\n{}", msg),
-                    SirenError::Runtime(msg) => println!("Runtime error:\n{}", msg),
-                }
+                let e = match msg {
+                    SirenError::Parse(msg) => format!("Parse error:\n{}", msg),
+                    SirenError::Compile(msg) => format!("Compilation error:\n{}", msg),
+                    SirenError::Runtime(msg) => format!("Runtime error:\n{}", msg),
+                };
+                println!("{}", e.red());
             }
         }
         Err(e) => println!(
