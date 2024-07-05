@@ -1,20 +1,38 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use colored::Colorize;
-use siren_language::{run_file, SirenError};
+use siren_language::{parse_file, run_file, SirenError};
 use std::{fs, path::PathBuf};
 
 #[derive(Parser)]
 struct Cli {
-    #[arg(
-        value_name = "source file",
-        help = "Path to the source file to interpret"
-    )]
-    file: PathBuf,
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    Run {
+        #[arg(
+            value_name = "source file",
+            help = "Path to the source file to interpret"
+        )]
+        file: PathBuf,
+    },
+    Parse {
+        #[arg(
+            value_name = "source file",
+            help = "Path to the source file to interpret"
+        )]
+        file: PathBuf,
+    },
 }
 
 fn main() {
     let cli = Cli::parse();
-    file_interpreter(cli.file);
+    match cli.command {
+        Command::Run { file } => file_interpreter(file),
+        Command::Parse { file } => print_ast(file),
+    }
 }
 
 fn file_interpreter(path: PathBuf) {
@@ -32,6 +50,20 @@ fn file_interpreter(path: PathBuf) {
             "{}\n{}",
             e.to_string().red(),
             format!("Path: {:?}", path).red()
+        ),
+    }
+}
+
+fn print_ast(file: PathBuf) {
+    match fs::read_to_string(file.clone()) {
+        Ok(content) => match parse_file(&content) {
+            Ok(p) => println!("{}", p),
+            Err(msg) => println!("Parse error:\n{}", msg),
+        },
+        Err(e) => println!(
+            "{}\n{}",
+            e.to_string().red(),
+            format!("Path: {:?}", file).red()
         ),
     }
 }
