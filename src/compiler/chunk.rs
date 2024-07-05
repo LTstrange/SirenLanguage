@@ -23,8 +23,12 @@ impl Chunk {
     }
 
     pub fn add_constant(&mut self, value: Value) -> u8 {
-        self.constants.push(value);
-        (self.constants.len() - 1) as u8
+        if let Some(ind) = get_const_ind(self, &value) {
+            ind
+        } else {
+            self.constants.push(value);
+            (self.constants.len() - 1) as u8
+        }
     }
 
     pub fn add_inst(&mut self, inst: Inst) {
@@ -45,4 +49,13 @@ pub fn disassemble_chunk(chunk: &Chunk, name: &str) {
     for (i, inst) in chunk.code.iter().enumerate() {
         println!("{:04} {}", i, inst.disassemble(chunk));
     }
+}
+
+pub fn get_const_ind(chunk: &Chunk, value: &Value) -> Option<u8> {
+    chunk
+        .constants
+        .iter()
+        .enumerate()
+        .find(|(_, stored_value)| stored_value == &value)
+        .map(|(ind, _)| ind as u8)
 }
