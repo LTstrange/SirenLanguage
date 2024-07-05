@@ -3,6 +3,7 @@ mod instruction;
 
 use super::*;
 
+use chunk::get_const_ind;
 pub use chunk::{disassemble_chunk, Chunk};
 pub use instruction::Inst;
 
@@ -72,5 +73,10 @@ pub fn compile(program: Program) -> Result<Chunk, String> {
     for item in program.0 {
         compile_item(item, &mut chunk)?;
     }
-    Ok(chunk)
+    if let Some(ind) = get_const_ind(&chunk, &Value::String("main".to_string())) {
+        chunk.add_inst(Inst::GetGlobal(ind));
+        Ok(chunk)
+    } else {
+        Err("No main entry found.".to_string())
+    }
 }
