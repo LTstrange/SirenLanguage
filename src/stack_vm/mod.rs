@@ -23,7 +23,12 @@ mod tests {
         let mut vm = VM::new(&chunk);
 
         match vm.run() {
-            Ok(Value::Number(v)) => assert_eq!(v, -1.2),
+            Ok(results) => {
+                let Value::Number(v) = results[0] else {
+                    panic!("Expected a number, got {:?}", results[0]);
+                };
+                assert_eq!(v, -1.2)
+            }
             _ => unreachable!("Test fail: Didn't return a number"),
         }
     }
@@ -43,7 +48,12 @@ mod tests {
         chunk.add_inst(Inst::Ret);
         let mut vm = VM::new(&chunk);
         match vm.run() {
-            Ok(Value::Number(v)) => assert_eq!(v, -0.82142866),
+            Ok(results) => {
+                let Value::Number(v) = results[0] else {
+                    panic!("Expected a number, got {:?}", results[0]);
+                };
+                assert_eq!(v, -0.82142866)
+            }
             _ => unreachable!("Test fail: Didn't return a number"),
         }
     }

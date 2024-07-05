@@ -15,7 +15,7 @@ impl<'a> VM<'a> {
         }
     }
 
-    pub fn run(&mut self) -> Result<Value, RuntimeError> {
+    pub fn run(&mut self) -> Result<Vec<Value>, RuntimeError> {
         while self.pc < self.code.len() {
             let op = &self.code[self.pc];
             match op {
@@ -23,8 +23,7 @@ impl<'a> VM<'a> {
                     self.stack.push(self.code.get_const(*ind as usize).clone());
                 }
                 Inst::Ret => {
-                    let v = self.pop()?;
-                    return Ok(v);
+                    return Ok(self.stack.clone());
                 }
                 Inst::Neg => match self.pop()? {
                     Value::Number(v) => self.stack.push(Value::Number(-v)),
@@ -35,7 +34,7 @@ impl<'a> VM<'a> {
             self.pc += 1;
             self.print_stack();
         }
-        self.pop().or(Ok(Value::Unit))
+        Ok(self.stack.clone())
     }
 
     pub fn print_stack(&self) {

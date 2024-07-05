@@ -22,7 +22,10 @@ pub fn run_file(input: &str) -> Result<(), SirenError> {
     disassemble_chunk(&code, "Compiled Code");
     println!("== Stack Machine Execution ==");
     let result = VM::new(&code).run().map_err(SirenError::Runtime)?;
-    println!("Output: {}", result);
+    println!("Output:");
+    for value in result {
+        print!("[{}]", value);
+    }
     Ok(())
 }
 
