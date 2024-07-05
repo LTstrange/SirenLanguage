@@ -1,5 +1,6 @@
 mod ast;
 mod ast_display;
+mod error;
 mod function_parser;
 mod item_parser;
 mod pratt_parser;
@@ -22,6 +23,7 @@ mod prelude {
 use prelude::*;
 
 pub use ast::*;
+pub use error::*;
 
 #[derive(Parser)]
 #[grammar = "parser/grammar.pest"]

@@ -6,8 +6,14 @@ use compiler::*;
 use parser::*;
 use stack_vm::*;
 
-pub fn run_file(input: &str) -> Result<(), String> {
-    let program = parse_file(input)?;
+pub enum SirenError {
+    Parse(ParserError),
+    Compile(String),
+    Runtime(RuntimeError),
+}
+
+pub fn run_file(input: &str) -> Result<(), SirenError> {
+    let program = parse_file(input).map_err(SirenError::Parse)?;
     println!("{}", program);
     let code = compile(program).unwrap();
     let result = VM::new(&code).run().unwrap();

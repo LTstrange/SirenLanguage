@@ -1,9 +1,11 @@
+mod error;
 mod stack;
 mod value;
 
 use super::*;
 use value::*;
 
+pub use error::*;
 pub use stack::VM;
 pub use value::Value;
 
