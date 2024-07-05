@@ -42,10 +42,18 @@ impl Inst {
             }
             Inst::Ret => "OP_RETURN".to_string(),
             Inst::DefineGlobal(ind) => {
-                format!("OP_DEFINE_GLOBAL   '{}'", chunk.get_const(*ind as usize))
+                format!(
+                    "OP_DEF_GLOBAL  {:2}  '{}'",
+                    ind,
+                    chunk.get_const(*ind as usize)
+                )
             }
             Inst::GetGlobal(ind) => {
-                format!("OP_Get_GLOBAL      '{}'", chunk.get_const(*ind as usize))
+                format!(
+                    "OP_Get_GLOBAL  {:2}  '{}'",
+                    ind,
+                    chunk.get_const(*ind as usize)
+                )
             }
         }
     }
