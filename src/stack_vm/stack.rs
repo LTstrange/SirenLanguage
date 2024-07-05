@@ -37,7 +37,7 @@ impl<'a> VM<'a> {
                 Inst::DefineGlobal(ind) => {
                     let Value::String(name) = self.code.get_const(*ind as usize) else {
                         return Err(RuntimeError::BadInstruction(
-                            "Unwrap Ident, but not get string!!".to_string(),
+                            "Unwarp Ident, but not get string!!".to_string(),
                         ));
                     };
                     let value = self.pop()?;
@@ -54,7 +54,7 @@ impl<'a> VM<'a> {
                     } else {
                         return Err(RuntimeError::UndefinedVariable(name.to_string()));
                     }
-                },
+                }
             }
             self.pc += 1;
             self.print_stack(op, self.code);
@@ -65,7 +65,11 @@ impl<'a> VM<'a> {
     pub fn print_stack(&self, op: &Inst, chunk: &Chunk) {
         print!("{:30} ", op.disassemble(chunk));
         for value in &self.stack {
-            print!("[{}]", value);
+            match value {
+                Value::Number(n) => print!("[{}]", n),
+                Value::String(s) => print!("[{:?}]", s),
+                Value::Unit => print!("[()]"),
+            }
         }
         println!();
     }
