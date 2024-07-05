@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use siren_language::{parse_file, run_file, SirenError};
+use siren_language::{parse_file, pretty_print_program, run_file, SirenError};
 use std::{fs, path::PathBuf};
 
 #[derive(Parser)]
@@ -19,6 +19,8 @@ enum Command {
         file: PathBuf,
     },
     Parse {
+        #[arg(short, long, help = "Pretty print the AST")]
+        pretty: bool,
         #[arg(
             value_name = "source file",
             help = "Path to the source file to interpret"
@@ -31,7 +33,7 @@ fn main() {
     let cli = Cli::parse();
     match cli.command {
         Command::Run { file } => file_interpreter(file),
-        Command::Parse { file } => print_ast(file),
+        Command::Parse { pretty, file } => print_ast(pretty, file),
     }
 }
 
@@ -54,11 +56,12 @@ fn file_interpreter(path: PathBuf) {
     }
 }
 
-fn print_ast(file: PathBuf) {
+fn print_ast(pretty: bool, file: PathBuf) {
     match fs::read_to_string(file.clone()) {
-        Ok(content) => match parse_file(&content) {
-            Ok(p) => println!("{}", p),
-            Err(msg) => println!("Parse error:\n{}", msg),
+        Ok(content) => match (pretty, parse_file(&content)) {
+            (false, Ok(p)) => println!("{}", p),
+            (true, Ok(p)) => pretty_print_program(&p, 0),
+            (_, Err(msg)) => println!("Parse error:\n{}", msg),
         },
         Err(e) => println!(
             "{}\n{}",

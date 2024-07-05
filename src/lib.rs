@@ -12,6 +12,7 @@ pub enum SirenError {
     Runtime(RuntimeError),
 }
 pub use parser::parse_file;
+pub use parser::pretty_print_program;
 
 pub fn run_file(input: &str) -> Result<(), SirenError> {
     let program = parse_file(input).map_err(SirenError::Parse)?;

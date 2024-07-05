@@ -1,5 +1,6 @@
 mod ast;
 mod ast_display;
+mod ast_pretty_print;
 mod error;
 mod function_parser;
 mod item_parser;
@@ -23,6 +24,7 @@ mod prelude {
 use prelude::*;
 
 pub use ast::*;
+pub use ast_pretty_print::pretty_print_program;
 pub use error::*;
 
 #[derive(Parser)]
