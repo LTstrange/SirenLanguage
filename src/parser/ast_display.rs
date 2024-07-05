@@ -16,6 +16,7 @@ impl Display for Item<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Item::DefItem { ident, expr } => write!(f, "(bind {} {})", ident, expr),
+            Item::Expr(expr) => write!(f, "{}", expr),
         }
     }
 }

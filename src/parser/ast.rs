@@ -4,6 +4,7 @@ pub struct Program<'a>(pub Vec<Item<'a>>);
 #[derive(Debug)]
 pub enum Item<'a> {
     DefItem { ident: Ident<'a>, expr: Expr<'a> },
+    Expr(Box<Expr<'a>>),
 }
 
 #[derive(Debug)]

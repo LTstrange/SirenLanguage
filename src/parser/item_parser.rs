@@ -8,6 +8,10 @@ pub fn parse_item<'a>(item: Pair<'a, Rule>, pratt: &PrattParser<Rule>) -> Option
             let expr = pratt_parse(pairs.next().unwrap().into_inner(), pratt);
             Some(Item::DefItem { ident, expr })
         }
+        Rule::expr => {
+            let expr = pratt_parse(item.into_inner(), pratt);
+            Some(Item::Expr(Box::new(expr)))
+        }
         Rule::EOI => None,
         _ => unreachable!(),
     }
