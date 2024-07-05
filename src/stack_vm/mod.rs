@@ -1,14 +1,8 @@
 mod stack;
 mod value;
 
-mod prelude {
-    pub use super::stack::*;
-    pub use super::value::*;
-
-    pub use super::super::*;
-}
-
-use prelude::*;
+use super::*;
+use value::*;
 
 pub use stack::VM;
 pub use value::Value;

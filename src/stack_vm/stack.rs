@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::*;
 
 pub struct VM<'a> {
     stack: Vec<Value>,

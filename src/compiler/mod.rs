@@ -1,14 +1,7 @@
 mod chunk;
 mod instruction;
 
-mod prelude {
-    pub use super::chunk::*;
-    pub use super::instruction::*;
-
-    pub use super::super::*;
-}
-
-use prelude::*;
+use super::*;
 
 pub use chunk::Chunk;
 pub use instruction::Inst;
