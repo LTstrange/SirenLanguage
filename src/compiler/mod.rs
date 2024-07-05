@@ -15,8 +15,8 @@ pub use instruction::Inst;
 
 fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
     match expr {
-        Expr::Id(name) => todo!(),
-        Expr::Literal(Literal::Boolean(b)) => {
+        Expr::Id(_name) => todo!(),
+        Expr::Literal(Literal::Boolean(_b)) => {
             // let b  = chunk.add_constant(Value::(b));
             // chunk.add_inst(Inst::Const(b));
             todo!()
@@ -61,18 +61,14 @@ fn compile_expr(expr: Expr, chunk: &mut Chunk) -> Result<(), String> {
     Ok(())
 }
 
-pub fn compile_ast(program: Program) -> Result<Chunk, String> {
-    todo!()
-}
-
 pub fn compile_item(item: Item) -> Result<Chunk, String> {
     let mut chunk = Chunk::new();
     match item {
         Item::Expr(expr) => compile_expr(*expr, &mut chunk)?,
-        Item::DefItem { ident, expr } => todo!(),
+        Item::DefItem { ident: _, expr: _ } => todo!(),
     };
     Ok(chunk)
 }
-pub fn compile(program: Program) -> Result<Chunk, String> {
+pub fn compile(_program: Program) -> Result<Chunk, String> {
     todo!()
 }
