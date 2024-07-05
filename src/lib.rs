@@ -14,9 +14,9 @@ pub fn run_file(input: &str) -> Result<(), String> {
 }
 
 pub fn run_line(input: &str) -> Result<(), String> {
-    let item = parser::parse_line(input)?;
-    if let Some(item) = item {
-        println!("{}", item);
-    }
+    let item = parser::parse_line(input)?.unwrap();
+    let code = compile_item(item).unwrap();
+    let mut vm = VM::new(&code);
+    vm.run();
     Ok(())
 }
